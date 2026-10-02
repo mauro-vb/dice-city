@@ -16,6 +16,17 @@ function split2d(s)
     return arr
 end
 
+function min_max_table(t, op)
+	if not t then
+		return nil
+	end
+	local val = t[1]
+	for c in all(t) do
+		val = max(val, c) and op == "max" or min(val, c)
+	end
+	return val
+end
+
 function shuffle(tbl)
     for i = #tbl, 2, -1 do
         local j = flr(rnd(i) + 1)

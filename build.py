@@ -34,7 +34,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent
 CART = ROOT / "cart.p8"
 SECTION_MARKERS = ("__gfx__", "__label__", "__map__", "__sfx__", "__music__")
-CATEGORIES = ["oop", "utils", "particles", "entities", "scenes"]
+CATEGORIES = ["oop", "ui", "utils", "particles", "entities", "scenes"]
 TESTS = ROOT / "tests"
 TEST_CART = TESTS / "run.p8"
 BUILD = ROOT / "build"
