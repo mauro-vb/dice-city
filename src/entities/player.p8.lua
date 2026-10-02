@@ -69,4 +69,5 @@ player = game_object:extend({
 		del(bag, d)
 	end,
 
+
 })

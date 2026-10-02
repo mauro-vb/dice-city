@@ -3,7 +3,7 @@
 
 title = scene:extend({
     init = function(_ENV)
-    	mydie=die:new({kind=stairs})--test
+    	mydie=die:new({kind=crown})--test
         entities = {mydie}
         -- parts = {} -- uncomment if you're using src/particles/
     end,

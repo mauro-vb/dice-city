@@ -25,7 +25,3 @@ fang    = {name="fang",    faces={0,0,6},       price=10, colors={8,14}}  -- avg
 brick   = {name="brick",   faces={2,2,3},       price=12, colors={11,13}} -- avg 2.3
 crown   = {name="crown",   faces={2,3,4},       price=15, colors={15,10}} -- avg 3.0
 pillar  = {name="pillar",  faces={3,3,3},       price=16, colors={11,10}} -- avg 3.0
-
-function die_type(def)
-	local die = merge({name="classic", faces={1,2,3,4,5,6}, price=5, colors={7,6}}, def)
-end

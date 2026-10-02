@@ -38,13 +38,22 @@ die = game_object:extend({
 		end
 	end,
 	drw = function(_ENV)
+		local ny = y
+		if #faces == 3 then
+			for i=1, 12 do
+				line(x - 6 + i/1.75, y + 6 - i, x + 7 - i/1.75, y + 6 - i, kind.colors[1])
+			end
+			line(x - 6, y + 6, x + 6, y + 6, kind.colors[2])
+			line(x - 7, y + 6, x, y - 6, kind.colors[2])
+			line(x + 7, y + 6, x, y - 6, kind.colors[2])
 
-		if #faces == 3 then end
-		if #faces == 6 then
-			rrectfill(x, y, 12, 12, 2, kind.colors[1])
-			rrect(x, y, 12, 12, 2, kind.colors[2])
-			print(faces[face_i], x + 5, y + 4,kind.colors[2])
 		end
+		if #faces == 6 then
+			ny = y - 2
+			rrectfill(x - 6, y - 6, 12, 12, 2, kind.colors[1])
+			rrect(x - 6, y - 6, 12, 12, 2, kind.colors[2])
+		end
+		print(faces[face_i], x - 1, ny, kind.colors[2])
 	end,
 	dummy_roll = function(_ENV)
 		face_i = flr(1 + rnd(#faces))
