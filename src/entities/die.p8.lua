@@ -1,16 +1,15 @@
 die = game_object:extend({
 	x = 0,
 	y = 0,
-	kind = classic, --
-	faces = {},
-	upgrades = {},
-	slot = nil,
-	value = nil,
-	face_i = nil,
+	-- false, not nil: a missing field falls through to globals (e.g. the slot class)
+	slot = false,
+	value = false,
+	face_i = 1,
 	init = function(_ENV)
-		faces = kind.faces
-		for i = 1, #kind.faces do
-			upgrades[i] = 0
+		kind = kind or classic
+		faces = {}
+		for f in all(kind.faces) do
+			add(faces, f)
 		end
 	end,
 	lowest = function(_ENV)
@@ -27,14 +26,14 @@ die = game_object:extend({
 		return sum / #faces
 	end,
 	upgrade_face = function(_ENV, i, v)
-		upgrades[i] += v
+		faces[i] += v
 	end,
 	clear = function(_ENV)
-		value = nil
+		value = false
 	end,
 	upd = function(_ENV)
-		if value == nil and t%20 == 0 then
-			dummy_roll(_ENV)
+		if not value and t % 20 == 0 then
+			face_i = face_i % #faces + 1
 		end
 	end,
 	drw = function(_ENV)
@@ -53,13 +52,9 @@ die = game_object:extend({
 			rrectfill(x - 6, y - 6, 12, 12, 2, kind.colors[1])
 			rrect(x - 6, y - 6, 12, 12, 2, kind.colors[2])
 		end
-		print(faces[face_i], x - 1, ny, kind.colors[2])
-	end,
-	dummy_roll = function(_ENV)
-		face_i = flr(1 + rnd(#faces))
+		print(value or faces[face_i], x - 1, ny, kind.colors[2])
 	end,
 	roll = function(_ENV)
-		dummy_roll(_ENV)
-		value = faces[face_i]
+		return roll_die(_ENV)
 	end
 })

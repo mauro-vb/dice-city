@@ -22,9 +22,28 @@ function min_max_table(t, op)
 	end
 	local val = t[1]
 	for c in all(t) do
-		val = max(val, c) and op == "max" or min(val, c)
+		if op == "max" then
+			val = max(val, c)
+		else
+			val = min(val, c)
+		end
 	end
 	return val
+end
+
+function concat(a, b)
+	local c = {}
+	for v in all(a) do add(c, v) end
+	for v in all(b) do add(c, v) end
+	return c
+end
+
+function join(t, sep)
+	local s = ""
+	for i = 1, #t do
+		s ..= (i > 1 and sep or "")..t[i]
+	end
+	return s
 end
 
 function shuffle(tbl)

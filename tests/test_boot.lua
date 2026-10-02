@@ -2,6 +2,6 @@
 test("boots into the first scene", function()
     boot()
     step(5)
-    check(scene.current == main_scene)
+    check(scene.current == title)
     snap("boot")
 end)

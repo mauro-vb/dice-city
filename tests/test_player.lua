@@ -1,0 +1,65 @@
+local function new_player()
+	local p = player:new()
+	for k in all({classic, classic, stairs, solid}) do
+		p:add_die(k)
+	end
+	return p
+end
+
+test("a new run starts with no dice", function()
+	local p = player:new()
+	check(#p.bag == 0 and p.coins == 20 and p.stage_i == 0)
+end)
+
+test("place and unplace never duplicate", function()
+	local p = new_player()
+	local d = p.bag[1]
+	p:place(d, "atk")
+	p:place(d, "spd")
+	check(#p.slots.atk == 0 and #p.slots.spd == 1)
+	p:unplace(d)
+	check(#p.slots.spd == 0 and #p.bag == 4 and not d.slot)
+end)
+
+test("cycle goes atk > spd > def > none", function()
+	local p = new_player()
+	local d = p.bag[1]
+	p:cycle(d) check(d.slot == "atk")
+	p:cycle(d) check(d.slot == "spd")
+	p:cycle(d) check(d.slot == "def")
+	p:cycle(d) check(not d.slot)
+end)
+
+test("get_stat includes the base", function()
+	local p = new_player()
+	check(p:get_stat("atk") == 1 and p:get_stat("def") == 0)
+	p:place(p.bag[4], "atk") -- solid: 1,1,1
+	check(p:get_stat("atk") == 1)
+	p:roll_all()
+	check(p:get_stat("atk") == 2)
+	check(p:stat_range("atk") == "2-2")
+end)
+
+test("roll_all rolls placed dice only", function()
+	local p = new_player()
+	p:place(p.bag[1], "atk")
+	p:roll_all()
+	check(p.bag[1].value and not p.bag[2].value)
+end)
+
+test("one reroll per fight", function()
+	local p = new_player()
+	local d = p.bag[1]
+	p:place(d, "def")
+	p:roll_all()
+	check(p:reroll(d))
+	check(not p:reroll(d))
+	p:roll_all()
+	check(p:reroll(d))
+end)
+
+test("new players don't share dice", function()
+	local a, b = new_player(), new_player()
+	a:add_die(crown)
+	check(#a.bag == 5 and #b.bag == 4)
+end)

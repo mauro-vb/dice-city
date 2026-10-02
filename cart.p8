@@ -9,6 +9,7 @@ __lua__
 #include src/oop/scene.p8.lua
 #include src/ui/button.p8.lua
 #include src/ui/focus.p8.lua
+#include src/ui/menu.p8.lua
 #include src/ui/selectable.p8.lua
 #include src/utils/color_settings.p8.lua
 #include src/utils/cursor.p8.lua
@@ -43,5 +44,6 @@ __lua__
 #include src/logic/combat.p8.lua
 #include src/logic/economy.p8.lua
 #include src/logic/roll.p8.lua
+#include src/logic/run.p8.lua
 #include src/main.p8.lua
 
