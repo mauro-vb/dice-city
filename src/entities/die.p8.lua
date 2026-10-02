@@ -1,6 +1,6 @@
-die = game_object:extend({
-	x = 0,
-	y = 0,
+die = selectable:extend({
+	w = 13,
+	h = 13,
 	-- false, not nil: a missing field falls through to globals (e.g. the slot class)
 	slot = false,
 	value = false,
@@ -24,6 +24,10 @@ die = game_object:extend({
 			sum += face
 		end
 		return sum / #faces
+	end,
+	-- one decimal, for display
+	avg_str = function(_ENV)
+		return tostr(flr(average(_ENV) * 10) / 10)
 	end,
 	upgrade_face = function(_ENV, i, v)
 		faces[i] += v

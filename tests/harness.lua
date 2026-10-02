@@ -1,5 +1,8 @@
 -- headless test harness, included first by tests/run.p8 (make test)
 --
+-- locals here are prefixed h_: every #include shares one chunk, so a
+-- plain `local held` would shadow game fields like focus.held
+--
 -- usage (tests/test_*.lua):
 --   test("player jumps", function()
 --       boot()                             -- fresh _init()
@@ -10,20 +13,32 @@
 
 reload(0x0, 0x0, 0x4300, "../cart.p8")
 
-local held, prev = {}, {}
-local passed, failures = 0, {}
+local h_held, h_prev = {}, {}
+local h_passed, h_failures = 0, {}
 
-function btn(b) return held[b] or false end
-function btnp(b) return held[b] and not prev[b] end
+function btn(b) return h_held[b] or false end
+function btnp(b) return h_held[b] and not h_prev[b] end
 
-function hold(b) held[b] = true end
-function release(b) held[b] = nil end
+function hold(b) h_held[b] = true end
+function release(b) h_held[b] = nil end
+
+-- fake mouse: stat(32/33/34) read these instead of the real mouse
+-- usage: mouse(40, 60, 1) -- move to 40,60 with the left button down
+local h_mx, h_my, h_mb = 0, 0, 0
+local h_stat = stat
+function stat(n)
+    if n == 32 then return h_mx end
+    if n == 33 then return h_my end
+    if n == 34 then return h_mb end
+    return h_stat(n)
+end
+function mouse(x, y, b) h_mx, h_my, h_mb = flr(x), flr(y), b or 0 end
 
 function step(n)
     for _ = 1, n or 1 do
         (_update60 or _update)()
         _draw()
-        for b = 0, 5 do prev[b] = held[b] end
+        for b = 0, 5 do h_prev[b] = h_held[b] end
     end
 end
 
@@ -50,18 +65,18 @@ function check(cond, msg)
 end
 
 function test(name, fn)
-    held, prev = {}, {}
+    h_held, h_prev = {}, {}
     local co = cocreate(fn)
     local ok, err = coresume(co)
     if ok then
-        passed += 1
+        h_passed += 1
     else
-        add(failures, name .. ": " .. tostr(err))
+        add(h_failures, name .. ": " .. tostr(err))
     end
 end
 
 function test_summary()
-    for f in all(failures) do printh("FAIL " .. f) end
-    printh("ok " .. passed .. "/" .. (passed + #failures))
+    for f in all(h_failures) do printh("FAIL " .. f) end
+    printh("ok " .. h_passed .. "/" .. (h_passed + #h_failures))
     _init, _update, _update60, _draw = nil
 end

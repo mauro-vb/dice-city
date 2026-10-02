@@ -1,19 +1,23 @@
 title = scene:extend({
 	init = function(_ENV)
-		m = menu:new({x = 50, y = 80})
-		m:item("start", function()
-			new_run()
-			scene:load(shop)
-		end)
+		f = focus:new()
+		start_btn = f:item(button:new({
+			label = "start", x = 64, y = 84,
+			on_press = function()
+				new_run()
+				scene:load(shop)
+			end,
+		}))
 	end,
 
 	upd = function(_ENV)
-		m:upd()
+		f:upd()
 	end,
 
 	drw = function(_ENV)
 		cls(0)
 		print("autoroll", 48, 50, 7)
-		m:drw()
+		start_btn:drw()
+		f:drw()
 	end
 })

@@ -7,7 +7,8 @@ combat = scene:extend({
 		ev_i = 0
 		timer = 0
 		last = ""
-		m = menu:new({x = 4, y = 100})
+		f = focus:new()
+		cont_btn = false
 	end,
 
 	done = function(_ENV)
@@ -15,10 +16,13 @@ combat = scene:extend({
 	end,
 
 	upd = function(_ENV)
-		m:upd()
+		f:upd()
 		if done(_ENV) then
-			if #m.items == 0 then
-				m:item("continue", function() scene:load(next_scene) end)
+			if not cont_btn then
+				cont_btn = f:item(button:new({
+					label = "continue", x = 64, y = 110, w = 40,
+					on_press = function() scene:load(next_scene) end,
+				}))
 			end
 			return
 		end
@@ -42,6 +46,7 @@ combat = scene:extend({
 				print("+"..gain.reward.." reward  +"..gain.leftover.." leftover", 4, 66, 10)
 			end
 		end
-		m:drw()
+		if cont_btn then cont_btn:drw() end
+		f:drw()
 	end
 })

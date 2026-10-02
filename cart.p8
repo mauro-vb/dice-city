@@ -7,10 +7,9 @@ __lua__
 #include src/oop/class.p8.lua
 #include src/oop/game_object.p8.lua
 #include src/oop/scene.p8.lua
+#include src/oop/selectable.p8.lua
 #include src/ui/button.p8.lua
 #include src/ui/focus.p8.lua
-#include src/ui/menu.p8.lua
-#include src/ui/selectable.p8.lua
 #include src/utils/color_settings.p8.lua
 #include src/utils/cursor.p8.lua
 #include src/utils/helpers.p8.lua
