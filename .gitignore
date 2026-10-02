@@ -1,7 +1,18 @@
+# os / editor
 .DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+
+# python
 __pycache__/
 *.pyc
+
+# backups
 *.bak
+
 
 # make flat output
 build/
@@ -17,3 +28,6 @@ tests/.last_run.log
 
 # snap() output
 tests/snaps/
+
+# docs stay local
+docs
