@@ -93,10 +93,7 @@ def write_test_carts(includes):
     for old in TESTS.glob("run_*"):
         old.unlink()
     TEST_CART.unlink(missing_ok=True)
-    # src/particles/ isn't used by the game yet and doesn't fit next to the tests
-    # (Mauro's choice, 2026-10-03). once the game uses particles, drop this filter
-    game = [line.replace("#include ", "#include ../", 1) for line in includes
-            if "src/particles/" not in line]
+    game = [line.replace("#include ", "#include ../", 1) for line in includes]
     count = 0
     for path in sorted(TESTS.glob("test_*.lua")):
         head, chunks = split_tests(path.read_text())

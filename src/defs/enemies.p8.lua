@@ -1,6 +1,2 @@
-enemy1 = {hp=6,  atk=2, spd=2,  def=0}
-enemy2 = {hp=8,  atk=3, spd=5,  def=0}
-enemy3 = {hp=12, atk=3, spd=2,  def=2}
-enemy4 = {hp=8,  atk=2, spd=10, def=0}
-enemy5 = {hp=16, atk=5, spd=3,  def=3}
-enemy6 = {hp=24, atk=6, spd=4,  def=2}
+-- art = index into myspr (data/myspr.txt)
+defs("id,hp,atk,spd,def,art,face_art", "enemy1,6,2,2,0,1,8|enemy2,8,3,5,0,2,9|enemy3,12,3,2,2,3,10|enemy4,8,2,10,0,4,11|enemy5,16,5,3,3,5,12|enemy6,24,6,4,2,6,13")

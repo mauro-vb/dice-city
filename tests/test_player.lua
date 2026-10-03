@@ -6,10 +6,10 @@ local function new_player()
 	return p
 end
 
-test("a new run starts with no dice and one reroll", function()
+test("a new run starts with no dice and no items", function()
 	local p = player:new()
 	check(#p.bag == 0 and p.coins == 20 and p.stage_i == 0)
-	check(#p.items == 1 and p.items[1].k == token and p.items[1].n == 1)
+	check(#p.items == 0)
 end)
 
 test("place and unplace never duplicate", function()

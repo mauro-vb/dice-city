@@ -10,8 +10,7 @@ player = game_object:extend({
 		base = {atk = 1, spd = 1, def = 0}
 		slots = {atk = {}, spd = {}, def = {}}
 		bag = {}
-		-- every run starts with one reroll
-		items = {{k = token, n = 1}}
+		items = {}
 	end,
 	place = function(_ENV, d, s)
 		unplace(_ENV, d)

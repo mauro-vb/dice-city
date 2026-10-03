@@ -1,4 +1,4 @@
--- most tests start from an empty inventory (a new run has one reroll)
+-- most tests start from an empty inventory
 local function fresh()
 	new_run()
 	run.items = {}
@@ -90,7 +90,7 @@ test("bag dice count as coins only after rolling", function()
 end)
 
 test("offers repeat from the pool", function()
-	local o = gen_offers(stage_def({pool = {d3}, offers = 4}))
+	local o = gen_offers({pool = {d3}, offers = 4})
 	check(#o == 4 and o[1] == d3 and o[4] == d3)
 end)
 
@@ -113,4 +113,64 @@ test("bag coins are counted when the fight starts, not after", function()
 	local b = battle:new({p = run, foe = enemy1})
 	run:unplace(a)
 	check(b.coins == 2 and b.stats.atk == 3, "only the unplaced die pays; atk kept")
+end)
+
+test("selling: half the price rounded down, die leaves the bag", function()
+	fresh()
+	run.coins = 0
+	local d = run:add_die(d6g)
+	check(sell_price(d) == flr(d6g.price / 2))
+	sell(d)
+	check(#run.bag == 0 and run.coins == flr(d6g.price / 2))
+end)
+
+test("at most dice_max dice", function()
+	fresh()
+	run.coins = 999
+	for i = 1, dice_max do
+		check(buy(d3))
+	end
+	check(not can_buy(d3) and #run.bag == dice_max, "bag full")
+	check(can_buy(potion), "items still fine")
+	sell(run.bag[1])
+	check(can_buy(d3), "room again after selling")
+end)
+
+test("a column takes at most 3 dice", function()
+	fresh()
+	local col = slot:new({key = "atk"})
+	for i = 1, 4 do
+		run:add_die(d6)
+	end
+	for i = 1, 3 do
+		check(col:accepts(run.bag[i]))
+		run:place(run.bag[i], "atk")
+	end
+	check(not col:accepts(run.bag[4]), "full")
+	check(col:accepts(run.bag[1]), "a die already in it can move within it")
+end)
+
+test("d8 rolls 1-8 and prints its value", function()
+	local d = die:new({kind = d8})
+	for _ = 1, 30 do
+		local v = roll_die(d)
+		check(v >= 1 and v <= 8)
+	end
+	check(d.w == 16)
+end)
+
+test("double: a temporary copy in the same column, if it fits", function()
+	fresh()
+	run.coins = 99
+	buy(double)
+	buy(double)
+	local d = run:add_die(d6)
+	check(not use_item(1, false, d) and run.items[1].n == 2, "not placed: refused, not used up")
+	run:place(d, "atk")
+	roll_die(d)
+	check(use_item(1, false, d) == double and #run.slots.atk == 2)
+	local c = run.slots.atk[2]
+	check(c.temp and c.value == d.value and c.kind == d6 and c.faces != d.faces, "same value, own faces")
+	run:place(run:add_die(d3), "atk")
+	check(not use_item(1, false, d), "column full")
 end)

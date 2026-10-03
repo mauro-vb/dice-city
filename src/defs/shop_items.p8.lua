@@ -1,5 +1,3 @@
--- shop items that aren't dice (no faces); economy.buy applies them
+-- shop items that aren't dice (no faces); economy applies them
 -- inv = goes into the inventory (stacks per slot) and is used from there
-potion = {name="potion", price=3, info="heals 5 hp", inv=true}
-bomb   = {name="bomb", price=4, info="4 damage (in a fight)", inv=true}
-token  = {name="reroll", price=3, info="reroll a die you rolled", inv=true}
+defs("id,name,price,info,inv", "potion,beer,3,heals 5 hp,1|bomb,bomb,4,4 damage (in a fight),1|token,reroll,3,reroll a die you rolled,1|double,double,4,copy a placed die (1 fight),1|rig,rig,4,+2 to a random face,1")

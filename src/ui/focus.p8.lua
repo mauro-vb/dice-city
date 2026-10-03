@@ -14,7 +14,9 @@ focus = class:extend({
 		held = false
 		dragging = false
 		mouse_on = false
-		mx, my = cursor.x, cursor.y
+		-- off-screen start: the first frame counts as a mouse move, so the
+		-- pointer shows right after a click that changed the scene
+		mx, my = -1, -1
 		-- frames the same item has been hovered (tooltips wait for it)
 		hover_t, last = 0, false
 		-- global, written by the tooltip (a field here would hide it)
@@ -161,9 +163,8 @@ focus = class:extend({
 			held:drw()
 			held.x, held.y = ox, oy
 		end
-		if mouse_on then
-			line(mx, my, mx, my + 5, 7)
-			line(mx, my, mx + 3, my + 3, 7)
-		end
+		-- pointer: myspr region 15, or 16 while carrying a die or the button is
+		-- down; each region's offset puts its tip on the mouse
+		if mouse_on then mspr(myspr[(held or stat(34) > 0) and 16 or 15], mx, my) end
 	end,
 })

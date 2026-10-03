@@ -14,7 +14,6 @@
 reload(0x0, 0x0, 0x4300, "../cart.p8")
 
 local h_held, h_prev = {}, {}
-local h_passed, h_failures = 0, {}
 
 function btn(b) return h_held[b] or false end
 function btnp(b) return h_held[b] and not h_prev[b] end
@@ -36,7 +35,7 @@ function mouse(x, y, b) h_mx, h_my, h_mb = flr(x), flr(y), b or 0 end
 
 function step(n)
     for _ = 1, n or 1 do
-        (_update60 or _update)()
+        _update60()
         _draw()
         for b = 0, 5 do h_prev[b] = h_held[b] end
     end
@@ -47,7 +46,6 @@ end
 function boot()
     scene.current = nil
     tween = ptween()
-    freeze_frames = 0
     srand(42) -- the game seeds randomly; tests stay repeatable
     _init()
 end
@@ -65,19 +63,14 @@ function check(cond, msg)
     assert(cond, msg or "check failed")
 end
 
+-- make test runs one test per cart, so a test reports its own result
 function test(name, fn)
     h_held, h_prev = {}, {}
-    local co = cocreate(fn)
-    local ok, err = coresume(co)
-    if ok then
-        h_passed += 1
-    else
-        add(h_failures, name .. ": " .. tostr(err))
-    end
+    local ok, err = coresume(cocreate(fn))
+    if not ok then printh("FAIL " .. name .. ": " .. tostr(err)) end
+    printh(ok and "ok 1/1" or "ok 0/1")
 end
 
 function test_summary()
-    for f in all(h_failures) do printh("FAIL " .. f) end
-    printh("ok " .. h_passed .. "/" .. (h_passed + #h_failures))
-    _init, _update, _update60, _draw = nil
+    _init, _update60, _draw = nil
 end

@@ -9,7 +9,7 @@ end)
 
 test("dice don't share faces", function()
 	local a, b = die:new({kind = d6}), die:new({kind = d6})
-	a:upgrade_face(1, 2)
+	a.faces[1] += 2
 	check(a.faces[1] == 3)
 	check(b.faces[1] == 1 and d6.faces[1] == 1)
 end)

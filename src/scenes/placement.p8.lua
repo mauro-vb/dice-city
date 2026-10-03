@@ -5,6 +5,7 @@ frames_per_tick = 10
 
 placement = scene:extend({
 	init = function(_ENV)
+		global.parts = {}
 		phase = "place"
 		foe = cur_stage().enemy
 		-- tweened values live in a fresh table per fight, so a tween still
@@ -13,6 +14,9 @@ placement = scene:extend({
 		-- intro: columns drop by off, the small art leaves to the left (small_x),
 		-- the header moves left to centre its bars (hx), the big art comes in (foe_x)
 		stage = {off = 0, small_x = 15, hx = 32, foe_x = -30}
+		lunge = {y = 0}
+		-- roll animation: roll_t counts frames since the roll; fight waits for roll_end
+		roll_t, roll_end, global.shake = 0, 0, 0
 		p_shown, e_shown, p_flash, e_flash = run.hp, foe.hp, 0, 0
 		ev_i, frames = 0, 0
 		b = false
@@ -21,10 +25,10 @@ placement = scene:extend({
 		cols = {}
 		for n = 1, #stat_names do
 			local k = stat_names[n]
-			cols[k] = f:item(slot:new({key = k, x = 21 + (n - 1) * 43, y = 62, h = 46}))
+			cols[k] = f:item(slot:new({key = k, x = 21 + (n - 1) * 43, y = 60, h = 47}))
 		end
 		f:item(selectable:new({
-			x = 44, y = 104, w = 85, h = 17,
+			x = 48, y = 100, w = 92, h = 17,
 			accepts = function() return true end,
 			on_drop = function(_, d) run:unplace(d) end,
 		}))
@@ -32,36 +36,49 @@ placement = scene:extend({
 			d.pickable = true
 			f:item(d)
 		end
-		-- one action button: roll -> fight -> next (never two at once)
+		-- one action button at the bag's height: roll -> fight -> next
 		act_btn = f:item(button:new({
-			x = 107, y = 103, w = 38,
+			x = 112, y = 100, h = 17,
 			on_press = function()
 				if phase == "done" then return scene:load(next_scene) end
 				if phase == "rolled" then return start_fight(_ENV) end
+				-- values first, then the show: columns left to right, bottom die
+				-- first, bag dice last, each landing 10 frames after the one before
 				run:roll_all()
+				local n = 0
+				for k in all(stat_names) do
+					for d in all(run.slots[k]) do
+						d:roll_anim(n)
+						n += 1
+					end
+				end
+				for d in all(run:unused()) do
+					d:roll_anim(n)
+					n += 1
+				end
+				-- last landing at 30 + 10n, totals 10 frames later
+				roll_t, roll_end = 0, 40 + 10 * n
 				phase = "rolled"
 			end,
-			enabled = function() return phase == "place" or phase == "rolled" or phase == "done" end,
+			enabled = function() return phase == "place" or phase == "rolled" and roll_t >= roll_end or phase == "done" and card.ready end,
 		}))
 		-- inventory: potions any time, bombs mid-fight, rerolls after rolling
 		-- (press the reroll, then a die: aim = the slot being aimed)
 		aim = false
 		pick = function(d)
-			use_item(aim, false, d)
+			-- a double adds a die: it joins the focus list too
+			local k = use_item(aim, false, d)
+			if k == double then f:item(run.bag[#run.bag]) end
+			if k == token then d:roll_anim(0) end
 			aim = false
 		end
-		inv = {}
-		for i = 1, inv_size do
-			add(inv, f:item(item_slot:new({
-				x = 81 + i * 13, y = 119,
-				on_press = function() use_at(_ENV, i) end,
-				enabled = function()
-					local s = run.items[i]
-					if s and s.k == token then return phase == "rolled" end
-					return phase != "intro" and phase != "done" and can_use(i, phase == "fight" and b)
-				end,
-			})))
-		end
+		inv = inv_slots(f, 120, function(i) use_at(_ENV, i) end, function(i)
+			local s = run.items[i]
+			if s and s.k == token then return phase == "rolled" end
+			if s and s.k == double then return phase == "place" or phase == "rolled" end
+			if s and s.k == rig then return phase == "place" end
+			return phase != "intro" and phase != "done" and can_use(i, phase == "fight" and b)
+		end)
 		layout(_ENV)
 	end,
 
@@ -74,6 +91,11 @@ placement = scene:extend({
 		b = battle:new({p = run, foe = foe})
 		for d in all(run.bag) do
 			run:unplace(d)
+			-- a double's copy counted for the stats; it doesn't stay
+			if d.temp then
+				del(run.bag, d)
+				del(f.items, d)
+			end
 		end
 		for k, col in pairs(cols) do
 			del(f.items, col)
@@ -105,7 +127,8 @@ placement = scene:extend({
 	-- use the item in slot i: a bomb hits the enemy like an attack would,
 	-- a potion fills your bar (the fight's hp mid-fight, the run's before)
 	use_at = function(_ENV, i)
-		if run.items[i].k == token then
+		local k = run.items[i].k
+		if k == token or k == double or k == rig then
 			aim = aim != i and i
 			return
 		end
@@ -120,30 +143,41 @@ placement = scene:extend({
 	layout = function(_ENV)
 		for k, col in pairs(cols) do
 			local ds = run.slots[k]
-			local gap = min(17, 30 / max(1, #ds - 1))
+			local gap = min(16, 32 / max(1, #ds - 1))
 			for i = 1, #ds do
-				ds[i]:move_to(col.x, 76 - (i - 1) * gap)
+				ds[i]:move_to(col.x, 75 - (i - 1) * gap)
 			end
 		end
 		local u = run:unused()
-		local gap = min(17, 67 / max(1, #u - 1))
+		local gap = min(17, 74 / max(1, #u - 1))
 		for i = 1, #u do
-			u[i]:move_to(11 + (i - 1) * gap, 104)
+			u[i]:move_to(11 + (i - 1) * gap, 100)
 		end
 	end,
 
 	upd = function(_ENV)
+
 		for d in all(run.bag) do
-			d.pickable = phase == "place"
+			d.pickable = phase == "place" and not aim
 			d.on_press = aim and pick
 		end
 		act_btn.label = phase == "place" and "roll" or phase == "done" and "next" or "fight"
 		f:upd()
+		-- a press can switch scenes (next -> shop): stop, or this screen's layout
+		-- would overwrite the shop's dice targets
+		if scene.current != placement then return end
 		layout(_ENV)
-		upd_group(run.bag)
-		for i = 1, inv_size do
-			inv[i]:set(run.items[i])
+		-- ❎ skips the roll: every die lands next frame, totals show at once
+		roll_t += 1
+		if btnp(5) and roll_t < roll_end then
+			for d in all(run.bag) do
+				if d.air > 0 then d.air = 1 end
+			end
+			roll_t = roll_end
 		end
+		global.shake = max(0, shake - 1)
+		upd_group(run.bag)
+		upd_group(parts)
 		if phase == "fight" then upd_fight(_ENV) end
 		p_flash = max(0, p_flash - 1)
 		e_flash = max(0, e_flash - 1)
@@ -164,12 +198,31 @@ placement = scene:extend({
 		phase = "done"
 		gain, next_scene = finish_fight(b)
 		coins_shown = run.coins
+		-- freeze the charge bars: fresh tables, so the running charge tweens
+		-- keep writing into the old ones
+		bars.p_charge, bars.e_charge = {v = bars.p_charge.v}, {v = bars.e_charge.v}
+		-- the result card waits a second, then drops in from above
+		card = {y = -80}
+		tween.new(card):add(60):add({k = "y", v = 0, f = 30, tr = "back", ease = "out"}):play(function() card.ready = true end)
 	end,
 
 	-- one event: snap the hp number, flash, let the trail follow, recharge
 	hit = function(_ENV, ev)
 		ev_i += 1
 		local target = ev.who == "p" and "e" or "p"
+		if target == "e" then
+			for i=1,ev.dmg do
+				burst(
+					rndrange(stage.foe_x - 10, stage.foe_x + 10),
+					rndrange(40, 70), {8, 2}, rndrange(5,14)
+				)
+			end
+		else
+			-- the enemy lunges at you: quick step down, ease back. a fresh
+			-- table each hit, so two lunges never tween the same field
+			lunge = {y = 0}
+			tween.new(lunge):add({k = "y", v = 8, f = 3, tr = "quad"}):add({k = "y", v = 0, f = 8, tr = "quad", ease = "out"}):play()
+		end
 		hurt_bar(_ENV, target, ev[target.."_hp"])
 		charge_next(_ENV, ev.who)
 	end,
@@ -184,74 +237,83 @@ placement = scene:extend({
 	end,
 
 	drw = function(_ENV)
-		cls(0)
+		cls(bg)
+		-- landing shake: the whole screen but the pointer and the result card
+		local sx, sy = 0, 0
+		if shake > 0 then sx, sy = rnd(3) - 1, rnd(3) - 1 end
+		camera(sx, sy)
 		local hx = stage.hx
-		if stage.small_x > -15 then drw_foe(_ENV, stage.small_x, 14, 27) end
+		if stage.small_x > -15 then drw_foe(_ENV, foe.face_art, stage.small_x, 14) end
 		print(foe_label(), hx, 2, 7)
-		txt("stage "..run.stage_i.."  $"..coins_shown, 127, 2, 7, "r")
 		hp_bar(hx, 9, 94, e_shown, bars.e_trail, foe.hp, 8, e_flash > 0)
 		charge_bar(hx, 17, 94, bars.e_charge.v)
 		print("atk"..foe.atk.." spd"..foe.spd.." def"..foe.def, hx, 22, 6)
 		if aim then txt("pick a die", 127, 22, 8, "r") end
-		line(0, 30, 127, 30, 5)
+		line(0, 29, 127, 29, dark)
 
 		-- middle band: columns and their dice, dropping out during the intro
-		clip(0, 31, 128, 64)
-		camera(0, -stage.off)
+		clip(0, 30, 128, 60)
+		camera(sx, sy - stage.off)
 		for k, col in pairs(cols) do
-			txt(k, col.x, 33, 6, "c")
+			txt(k, col.x, 31, 6, "c")
 			-- slot boxes only while placing; after the roll only dice and totals
 			if phase == "place" then col:drw() end
-			txt(phase == "place" and run:stat_range(k) or b and b.stats[k] or run:get_stat(k), col.x, 88, 7, "c")
+			-- totals once the dice have landed, popping up 1 px on that frame
+			txt(phase == "place" and run:stat_range(k) or b and b.stats[k] or roll_t < roll_end and "" or run:get_stat(k), col.x, roll_t == roll_end and 84 or 85, 7, "c")
 			for d in all(run.slots[k]) do
 				if d != f.held then d:drw() end
 			end
 		end
-		camera()
+		camera(sx, sy)
 		clip()
-		if stage.foe_x > -28 then drw_foe(_ENV, stage.foe_x, 62, 54) end
+		if stage.foe_x > -28 then drw_foe(_ENV, foe.art, stage.foe_x, 59 + lunge.y) end
 
-		rect(2, 95, 86, 112, 5)
-		if #run:unused() == 0 then txt("dice bag", 44, 102, 5, "c") end
-		if phase != "place" then txt("+"..(b and b.coins or leftover_coins(run:unused())).."$", 85, 97, 6, "r") end
+		rect(2, 91, 94, 108, dark) -- dice bag rect
+		if #run:unused() == 0 then txt("dice bag", 48, 98, dark, "c") end
+		if phase != "place" then txt("+"..(b and b.coins or leftover_coins(run:unused()))..cash, 93, 93, 6, "r") end
+		-- stage and coins under the button, next to the inventory
+		txt("stage "..run.stage_i, 126, 114, 7, "r")
+		txt(coins_shown..cash, 126, 121, 7, "r")
+		-- your rolled stats (kept by the battle) above your hp bar
+		if b then
+			local s = b.stats
+			print("atk"..s.atk.." spd"..s.spd.." def"..s.def, 2, 110, 6)
+		end
 		for d in all(run:unused()) do
 			if d != f.held then d:drw() end
 		end
-		hp_bar(2, 115, 44, p_shown, bars.p_trail, run.max_hp, 7, p_flash > 0)
-		charge_bar(2, 123, 44, bars.p_charge.v)
-		-- what you rolled, kept by the battle (the dice are back in the bag)
-		if b then
-			local s = b.stats
-			print("a"..s.atk.." s"..s.spd.." d"..s.def, 48, 117, 6)
-		end
+		hp_bar(2, 116, 58, p_shown, bars.p_trail, run.max_hp, 7, p_flash > 0)
+		charge_bar(2, 124, 58, bars.p_charge.v)
 		drw_group(inv)
 		if aim then
 			local s = inv[aim]
-			rect(s.x - 7, s.y - 7, s.x + 6, s.y + 6, 8)
+			rect(s.x - 6, s.y - 6, s.x + 5, s.y + 5, 8)
 		end
 		act_btn:drw()
+		drw_group(parts)
+		camera()
 		f:drw_frame()
-		if phase == "done" then drw_result(_ENV) end
+		if phase == "done" then
+			camera(0, -card.y)
+			drw_result(_ENV)
+			camera()
+		end
 		hover_tip(f)
 		f:drw()
 	end,
 
-	-- enemy art centred on x, y at size sz (27 in the header, 54 = full size in
-	-- the fight); shakes when hit. colour 14 is its transparent background
-	drw_foe = function(_ENV, x, y, sz)
-		local a = foe.art or enemy_test_spr
-		local sx = e_flash > 0 and rnd(3) - 1 or 0
-		palt(0, false)
-		palt(14, true)
-		sspr(a[1], a[2], a[3], a[4], x - sz \ 2 + sx, y - sz \ 2, sz, sz)
-		palt(14, false)
-		palt(0, true)
+	-- enemy art: myspr region i (face_art in the header, art in the fight)
+	-- centred on x, y with mspr; shakes when hit. green (11) is the sheet's
+	-- background: only it is transparent while drawing, then back to the usual
+	-- black + brown (palt bitmask: colour 0 = 0x8000 ... colour 15 = 1)
+	drw_foe = function(_ENV, i, x, y)
+		mspr(myspr[i], x + (e_flash > 0 and rnd(3) - 1 or 0), y)
 	end,
 
 	drw_result = function(_ENV)
 		local win = b:won()
 		local c = win and 7 or 8
-		rectfill(24, 46, 103, 72, 0)
+		rectfill(24, 46, 103, 72, bg)
 		rect(24, 46, 103, 72, c)
 		txt(win and "win!" or b:stalemate() and "no damage" or "defeated", 64, 51, c, "c", true)
 		if gain.reward + gain.leftover > 0 then

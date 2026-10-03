@@ -7,23 +7,24 @@
 pips_sq = split("5,19,159,1379,13579,134679", ",", false)
 pips_tri = split("5,28,279", ",", false)
 
--- black pips centred on x, y, s apart; 0 is an x, values without a layout print
-function draw_pips(x, y, v, s, tri)
+-- black pips centred on x, y, s apart; 0 is a sad face, values without a
+-- layout print. num: always print the value (d8). rg: a rigged face, its last
+-- pip is orange (a printed value turns orange with a black outline)
+function draw_pips(x, y, v, s, tri, num, rg)
 	if tri then y += s / 2 end
-	if v == 0 then
-		local a = s * .75
-		line(x - a, y - a, x + a, y + a, 0)
-		line(x - a, y + a, x + a, y - a, 0)
-		return
-	end
-	local set = (tri and pips_tri or pips_sq)[v]
-	if not set then return txt(v, x, y - 2, 0, "c") end
+	local set = v == 0 and "1379" or not num and (tri and pips_tri or pips_sq)[v]
+	if not set then return txt(v, x, y - 2, rg and 9 or 0, "c", rg) end
 	-- triangle dots sit closer together so the outer ones clear the edges
 	local r, sp = s \ 4, tri and s - s \ 4 or s
+	-- 0 is a sad face: eyes and mouth corners are pips 1 3 7 9, plus a bar
+	-- one pip higher between the corners (a frown)
+	if v == 0 then
+		rectfill(x - sp - r + s \ 2, y + sp - r - s \ 2, x + sp - r - 1, y + sp - r - 1, 0)
+	end
 	for i = 1, #set do
 		local p = tonum(set[i]) - 1
 		local px, py = x + (p % 3 - 1) * sp, y + (p \ 3 - 1) * sp
-		rectfill(px - r, py - r, px - r + s \ 2 - 1, py - r + s \ 2 - 1, 0)
+		rectfill(px - r, py - r, px - r + s \ 2 - 1, py - r + s \ 2 - 1, rg and i == #set and 9 or 0)
 	end
 end
 
@@ -41,7 +42,7 @@ end
 function face_bars(d, x0, y, sp, bw)
 	for i = 1, #d.faces do
 		local bx, bh = x0 + (i - 1) * sp, max(1, d.faces[i] * 1.5)
-		rectfill(bx, y - bh + 1, bx + bw - 1, y, d.value and i == d.face_i and 7 or 5)
+		rectfill(bx, y - bh + 1, bx + bw - 1, y, d.value and i == d.face_i and 7 or dark)
 	end
 end
 
@@ -56,10 +57,23 @@ die = selectable:extend({
 	ty = false,
 	moving = false,
 	hop = 0,
+	-- a double's copy: drawn inverted, gone when the fight starts
+	temp = false,
 	idle_t = 0,
+	-- roll animation (visual only, the value is already rolled): air = frames
+	-- left in the air of air_t; jump = height offset; flick = the face shown in
+	-- the air, ft = frames to the next one; sq = squash (> 0) or stretch (< 0)
+	-- in px; land = frames since the final landing
+	air = 0,
+	air_t = 1,
+	jump = 0,
+	flick = 0,
+	ft = 0,
+	sq = 0,
+	land = 9,
 	init = function(_ENV)
 		kind = kind or d6
-		faces = {}
+		faces, rigged = {}, {}
 		for f in all(kind.faces) do
 			add(faces, f)
 		end
@@ -82,11 +96,36 @@ die = selectable:extend({
 	avg_str = function(_ENV)
 		return tostr(flr(average(_ENV) * 10) / 10)
 	end,
-	upgrade_face = function(_ENV, i, v)
-		faces[i] += v
-	end,
 	clear = function(_ENV)
 		value = false
+	end,
+	-- start the roll animation; the i-th die lands 10 frames after the one before
+	roll_anim = function(_ENV, i)
+		air_t = 40 + 10 * i
+		air, ft = air_t, 0
+	end,
+	-- one frame in the air: 3 hops (abs sin arcs) shrinking to 0, faces
+	-- flicker slower and slower; the final landing shakes and throws dust
+	-- (sparks too on the highest face)
+	fly = function(_ENV)
+		air -= 1
+		local p = 1 - air / air_t
+		local f = p * 3 % 1
+		jump = sin(f / 2) * 13 * (1 - p) ^ 1.5
+		ft -= 1
+		if ft <= 0 then
+			ft, flick = 2 + 10 * p * p, rnd(faces)
+		end
+		-- squash touching the ground between hops, stretch while fast
+		sq = f < .15 and p > .2 and 1 or (f < .3 or f > .8) and -1 or 0
+		if air > 0 then return end
+		land, jump, global.shake = 0, 0, 4
+		spray(_ENV, 5, split"5,6", 1.5, .02)
+		if value == highest(_ENV) then spray(_ENV, 8, split"10,9,7", 2.5, .1) end
+		-- flash: a white circle a bit bigger than the die, then one in the
+		-- face's colour (dark grey lowest, yellow highest, white otherwise)
+		circlep({x = x, y = y, size = 20, c = 7, maxage = 2})
+		circlep({x = x, y = y, size = 18, c = value == lowest(_ENV) and dark or value == highest(_ENV) and 10 or 7, wait = 3, maxage = 4})
 	end,
 	-- glide to a spot with a tween; a new target waits for the running tween
 	move_to = function(_ENV, nx, ny)
@@ -101,6 +140,8 @@ die = selectable:extend({
 	end,
 	upd = function(_ENV)
 		if tx then move_to(_ENV, tx, ty) end
+		if air > 0 then fly(_ENV) end
+		land = min(land + 1, 9)
 		if value then return end
 		idle_t -= 1
 		if idle_t > 0 then return end
@@ -113,18 +154,30 @@ die = selectable:extend({
 		tw:play()
 	end,
 	drw = function(_ENV)
-		local yy, body = y + hop, value and 7 or 6
-		if #faces == 3 then
-			trifill(x, yy - 8, 18, 16, body)
-			-- left side drawn twice: a thicker edge
-			--line(x, yy - 8, x - 9, yy + 7, 5)
-			line(x - 1, yy - 8, x - 10, yy + 7, 5)
-			line(x, yy - 8, x + 9, yy + 7, 5)
-			line(x - 9, yy + 7, x + 8, yy + 7, 5)
-		else
-			rrectfill(x - 8, yy - 8, 16, 16, 3, body)
-			rrect(x - 8, yy - 8, 16, 16, 3, 5)
+		-- squash / stretch keeps the bottom edge on the ground: big squash for 3
+		-- frames after the final landing, then a small one for 2
+		local s = air > 0 and sq or land < 4 and 2 or land < 6 and 1 or 0
+		local tri, body, edge = #faces == 3, value and 7 or kind.rarity == 2 and 15 or 6, dark
+		local yy, w, h = y + hop + jump, (tri and 18 or 16) + s, 16 - s
+		local l, top, bot = x - w \ 2, yy + 8 - h, yy + 7
+		if temp then
+			body, edge = dark, 7
+			pal(0, 7)
 		end
-		draw_pips(x, yy, value or faces[face_i], 4, #faces == 3)
+		if tri then
+			trifill(x, top, w, h, body)
+			-- left side drawn twice: a thicker edge
+			line(x - 1, top, l - 1, bot, edge)
+			line(x, top, l + w, bot, edge)
+			line(l, bot, l + w - 1, bot, edge)
+		elseif #faces == 8 then
+			ovalfill(l, top, l + w - 1, bot, body)
+			oval(l, top, l + w - 1, bot, edge)
+		else
+			rrectfill(l, top, w, h, 3, body)
+			rrect(l, top, w, h, 3, edge)
+		end
+		draw_pips(x, yy + s / 2, air > 0 and flick or value or faces[face_i], 4, tri, #faces == 8, air == 0 and rigged[face_i])
+		pal(0, 0)
 	end,
 })

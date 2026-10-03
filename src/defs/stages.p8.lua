@@ -1,15 +1,8 @@
--- pool entries repeat to weight them: items are about 1 in 3 offers
-function stage_def(t)
-	return merge({reward = 0, boss = false, offers = 3, pool = {d6, d6, d3, d3, potion, token, bomb}, always = {}}, t)
+-- stage 0 is the opening shop (dice only, no fight); each row after it is
+-- enemy, reward, offers; the last stage is the boss. pool entries repeat to
+-- weight them (items are 4 in 12 offers)
+stages = {[0] = {pool = names"d6,d3", offers = 4, reward = 0}}
+for r in all(split2d"enemy1,2,3|enemy2,2,3|enemy3,3,4|enemy4,3,4|enemy5,4,4|enemy6,0,0") do
+	add(stages, {enemy = _ENV[r[1]], reward = r[2], offers = r[3], pool = names"d6,d6,d3,d3,d6g,d3p,d3pp,d8,potion,token,bomb,double,rig"})
 end
-
-stages = {
-	-- stage 0: the opening shop, no fight, dice only
-	[0] = stage_def({pool = {d6, d3}, offers = 4}),
-	stage_def({enemy = enemy1, reward = 2}),
-	stage_def({enemy = enemy2, reward = 2}),
-	stage_def({enemy = enemy3, reward = 3, offers = 4}),
-	stage_def({enemy = enemy4, reward = 3, offers = 4}),
-	stage_def({enemy = enemy5, reward = 4, offers = 4}),
-	stage_def({enemy = enemy6, boss = true}),
-}
+stages[#stages].boss = true
