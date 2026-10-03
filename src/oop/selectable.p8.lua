@@ -16,6 +16,8 @@ selectable = game_object:extend({
 	on_press = false,
 	accepts = false,
 	on_drop = _noop,
+	-- a die this item stands for (shop cards), for the hover tooltip
+	shows = false,
 	contains = function(_ENV, px, py)
 		return abs(px - x) * 2 <= w and abs(py - y) * 2 <= h
 	end,

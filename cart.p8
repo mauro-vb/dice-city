@@ -8,8 +8,10 @@ __lua__
 #include src/oop/game_object.p8.lua
 #include src/oop/scene.p8.lua
 #include src/oop/selectable.p8.lua
+#include src/ui/bars.p8.lua
 #include src/ui/button.p8.lua
 #include src/ui/focus.p8.lua
+#include src/ui/tooltip.p8.lua
 #include src/utils/color_settings.p8.lua
 #include src/utils/cursor.p8.lua
 #include src/utils/helpers.p8.lua
@@ -17,6 +19,7 @@ __lua__
 #include src/utils/math.p8.lua
 #include src/utils/ptween.p8.lua
 #include src/utils/sprite.p8.lua
+#include data/enemy_test.txt
 #include data/myspr.txt
 #include src/particles/particle.p8.lua
 #include src/particles/particle_ball.p8.lua
@@ -31,7 +34,6 @@ __lua__
 #include src/entities/enemy.p8.lua
 #include src/entities/player.p8.lua
 #include src/entities/slot.p8.lua
-#include src/scenes/combat.p8.lua
 #include src/scenes/end.p8.lua
 #include src/scenes/placement.p8.lua
 #include src/scenes/shop.p8.lua

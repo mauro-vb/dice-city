@@ -7,6 +7,7 @@ player = game_object:extend({
 		coins = 20
 		rerolls = 1
 		rerolls_left = 1
+		extra_rerolls = 0
 		stage_i = 0
 		won = false
 		base = {atk = 1, spd = 1, def = 0}
@@ -45,16 +46,16 @@ player = game_object:extend({
 		end
 		return lo.."-"..hi
 	end,
+	-- the whole bag: unused dice show the coins you'd get on a win
 	roll_all = function(_ENV)
-		for _, ds in pairs(slots) do
-			for d in all(ds) do
-				roll_die(d)
-			end
+		for d in all(bag) do
+			roll_die(d)
 		end
-		rerolls_left = rerolls
+		rerolls_left = rerolls + extra_rerolls
+		extra_rerolls = 0
 	end,
 	reroll = function(_ENV, d)
-		if rerolls_left <= 0 or not d.slot then return false end
+		if rerolls_left <= 0 then return false end
 		roll_die(d)
 		rerolls_left -= 1
 		return true

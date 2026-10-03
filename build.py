@@ -68,18 +68,47 @@ def collect_includes():
     return [f"#include {p.relative_to(ROOT).as_posix()}" for p in paths]
 
 
-def write_test_cart(includes):
-    """Flat cart for `make test`: harness + game code + tests/test_*.lua.
+def split_tests(src):
+    """Splits a test file into its shared part (helpers before the first
+    test) and one chunk per test("...") block (a line starting with `test(`)."""
+    lines = src.splitlines()
+    starts = [i for i, line in enumerate(lines) if line.startswith("test(")]
+    if not starts:
+        return "\n".join(lines), []
+    head = "\n".join(lines[: starts[0]])
+    ends = starts[1:] + [len(lines)]
+    return head, ["\n".join(lines[a:b]) for a, b in zip(starts, ends)]
 
-    PICO-8 can't nest #includes, so the game's include list is copied here
-    with paths made relative to tests/.
+
+def write_test_carts(includes):
+    """One cart per test for `make test`: harness + game + one test.
+
+    The game alone is close to PICO-8's 8192 tokens, so all tests together
+    don't fit in one cart. Each test("...") block gets its own
+    tests/run_<file>_<n>.p8 (plus a .lua with the file's shared helpers and
+    that one test). They live in tests/ so the harness's ../cart.p8 still
+    resolves. PICO-8 can't nest #includes, so the game's include list is
+    copied with paths made relative to tests/.
     """
-    game = [line.replace("#include ", "#include ../", 1) for line in includes]
-    tests = [f"#include {p.name}" for p in sorted(TESTS.glob("test_*.lua"))]
-    lines = (["pico-8 cartridge // http://www.pico-8.com", "version 43", "__lua__",
-              "#include harness.lua"] + game + tests + ["test_summary()", ""])
-    TEST_CART.write_text("\n".join(lines))
-    print(f"wrote {len(tests)} test files to {TEST_CART.relative_to(ROOT)}")
+    for old in TESTS.glob("run_*"):
+        old.unlink()
+    TEST_CART.unlink(missing_ok=True)
+    # src/particles/ isn't used by the game yet and doesn't fit next to the tests
+    # (Mauro's choice, 2026-10-03). once the game uses particles, drop this filter
+    game = [line.replace("#include ", "#include ../", 1) for line in includes
+            if "src/particles/" not in line]
+    count = 0
+    for path in sorted(TESTS.glob("test_*.lua")):
+        head, chunks = split_tests(path.read_text())
+        for n, chunk in enumerate(chunks, 1):
+            stem = f"run_{path.stem.removeprefix('test_')}_{n}"
+            (TESTS / f"{stem}.lua").write_text(head + "\n" + chunk + "\n")
+            lines = (["pico-8 cartridge // http://www.pico-8.com", "version 43", "__lua__",
+                      "#include harness.lua"] + game
+                     + [f"#include {stem}.lua", "test_summary()", ""])
+            (TESTS / f"{stem}.p8").write_text("\n".join(lines))
+            count += 1
+    print(f"wrote {count} test carts to tests/run_*.p8")
 
 
 def strip_comments(src):
@@ -117,7 +146,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", default="", help="cart title, written as '-- <name>'")
     parser.add_argument("--author", default="", help="cart author, written as '-- by <author>'")
-    parser.add_argument("--test", action="store_true", help="also write tests/run.p8")
+    parser.add_argument("--test", action="store_true", help="also write tests/run_*.p8 (one cart per test)")
     parser.add_argument("--flat", action="store_true", help="also write build/<name>.p8")
     args = parser.parse_args()
 
@@ -146,7 +175,7 @@ def main():
           + (f" (title: {args.name!r}, author: {args.author!r})" if header else ""))
 
     if args.test:
-        write_test_cart(includes)
+        write_test_carts(includes)
 
     if args.flat:
         write_flat_cart(lines, lua_i, end_i, header, includes, args.name)

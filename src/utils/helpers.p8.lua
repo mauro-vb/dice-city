@@ -74,3 +74,12 @@ function drw_group(group)
         end
     end
 end
+
+-- print with alignment and outline: al "c" centres on x, "r" puts the right
+-- edge at x; ol adds a black p8scii outline (\^o, neighbours 5a = l/r/t/b)
+-- usage: txt("win!", 64, 51, 7, "c", true)
+function txt(s, x, y, c, al, ol)
+	s = tostr(s)
+	x -= al == "c" and #s * 2 - 1 or al == "r" and #s * 4 or 0
+	print((ol and "\^o05a" or "")..s, x, y, c)
+end

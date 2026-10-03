@@ -16,7 +16,7 @@ title = scene:extend({
 
 	drw = function(_ENV)
 		cls(0)
-		print("autoroll", 48, 50, 7)
+		txt("autoroll", 64, 50, 7, "c", true)
 		start_btn:drw()
 		f:drw()
 	end

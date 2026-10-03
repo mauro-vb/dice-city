@@ -15,10 +15,25 @@ test("a fixed fight gives the expected events", function()
 	check(r.win and r.hp_left == 16)
 end)
 
-test("min 1 damage", function()
-	local p = fighter(1, 1, 0)
-	local r = p:fight({name = "wall", hp = 2, atk = 0, spd = 1, def = 10})
-	check(r.events[1].dmg == 1 and r.events[2].dmg == 1)
+test("def can block every point of damage", function()
+	local p = fighter(3, 1, 3)
+	local r = p:fight({hp = 6, atk = 2, spd = 1, def = 0})
+	for ev in all(r.events) do
+		if ev.who == "e" then check(ev.dmg == 0, "enemy hit for "..ev.dmg) end
+	end
+	check(r.win and r.hp_left == 20)
+end)
+
+test("def reduces damage by its value", function()
+	local p = fighter(3, 1, 1)
+	local r = p:fight({hp = 30, atk = 5, spd = 50, def = 0})
+	check(r.events[1].who == "e" and r.events[1].dmg == 4)
+end)
+
+test("nobody can hurt anybody: a loss at once", function()
+	local p = fighter(1, 1, 5)
+	local r = p:fight({hp = 6, atk = 2, spd = 1, def = 4})
+	check(not r.win and #r.events == 0 and r.hp_left == 20)
 end)
 
 test("player wins ties", function()

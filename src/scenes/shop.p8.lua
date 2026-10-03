@@ -1,39 +1,51 @@
 shop = scene:extend({
 	init = function(_ENV)
 		offers = gen_offers(cur_stage())
+		reroll_cost = 1
 		build(_ENV)
 	end,
 
-	-- rebuilt after each purchase so the bought offer disappears
+	-- rebuilt after each purchase or reroll
 	build = function(_ENV)
 		f = focus:new()
-		shown = {}
+		cards = {}
 		for i = 1, #offers do
 			local k = offers[i]
-			local d = die:new({
-				kind = k,
-				x = 64 + (i - (#offers + 1) / 2) * 26,
-				y = 36,
+			local cx = 64 + (i - (#offers + 1) / 2) * 32
+			add(cards, f:item(selectable:new({
+				x = cx, y = 39, w = 30, h = 42,
+				shows = k.faces and die:new({kind = k, x = cx, y = 28}) or k,
 				on_press = function()
-					if not buy(k) then return end
-					del(offers, k)
+					local got = buy(k)
+					if not got then return end
+					-- a bought die flies from its card to your row
+					if got != true then got.x, got.y = cx, 28 end
+					deli(offers, i)
 					build(_ENV)
 				end,
-				enabled = function() return run.coins >= k.price end,
-			})
-			add(shown, d)
-			f:item(d)
+				enabled = function() return can_buy(k) end,
+			})))
 		end
+		local gap = min(17, 106 / max(1, #run.bag - 1))
 		for i = 1, #run.bag do
 			local d = run.bag[i]
 			d.pickable = false
 			d.on_press = false
-			d.x = 10 + (i - 1) % 6 * 14
-			d.y = 108 + flr((i - 1) / 6) * 14
+			d:move_to(11 + (i - 1) * gap, 84)
 			f:item(d)
 		end
+		reroll_btn = f:item(button:new({
+			x = 104, y = 104, w = 44,
+			on_press = function()
+				if not run:spend(reroll_cost) then return end
+				offers = gen_offers(cur_stage())
+				reroll_cost += 1
+				build(_ENV)
+			end,
+			enabled = function() return run.coins >= reroll_cost end,
+		}))
 		fight_btn = f:item(button:new({
-			label = "fight", x = 110, y = 117, w = 30,
+			label = "fight", x = 112, y = 118,
 			on_press = function()
 				next_stage()
 				scene:load(placement)
@@ -43,44 +55,63 @@ shop = scene:extend({
 	end,
 
 	upd = function(_ENV)
-		upd_group(shown)
+		reroll_btn.label = "reroll $"..reroll_cost
+		for c in all(cards) do
+			if c.shows.faces then c.shows:upd() end
+		end
 		upd_group(run.bag)
 		f:upd()
 	end,
 
-	info = function(_ENV, d)
-		local k = d.kind
-		print(k.name, 6, 64, k.colors[1])
-		print("faces "..join(d.faces, " "), 6, 72, 6)
-		print("avg "..d:avg_str(), 6, 80, 6)
-		if d.on_press then
-			local can = run.coins >= k.price
-			print(can and "$"..k.price.." - click to buy" or "$"..k.price.." - not enough coins", 6, 88, can and 10 or 8)
+	drw_card = function(_ENV, c)
+		local k, can = c.shows, c:is_on()
+		local x0, y0 = c.x - c.w / 2, c.y - c.h / 2
+		rect(x0, y0, x0 + c.w - 1, y0 + c.h - 1, can and 6 or 5)
+		if k.faces then
+			k:drw()
+			local n = #k.faces
+			face_bars(k, c.x - (n * 3 - 1) / 2, 46, 3, 2)
+			k = k.kind
 		else
-			print("in your bag", 6, 88, 5)
+			drw_icon(k, c.x, 28)
 		end
+		txt(k.name, c.x, y0 + 30, can and 7 or 5, "c")
+		txt("$"..k.price, c.x, y0 + 36, run.coins >= k.price and 7 or 8, "c")
+	end,
+
+	-- potion: a bottle with red inside; reroll token: a die outline with +1
+	drw_icon = function(k, x, y)
+		if k == potion then
+			rectfill(x - 2, y - 8, x + 1, y - 4, 6)
+			circfill(x, y + 2, 6, 6)
+			circfill(x, y + 3, 4, 8)
+			return
+		end
+		rrect(x - 8, y - 8, 16, 16, 3, 6)
+		print("+1", x - 3, y - 2, 7)
 	end,
 
 	drw = function(_ENV)
 		cls(0)
 		print(run.stage_i == 0 and "shop - pick your dice" or "shop", 2, 2, 7)
-		print("$"..run.coins.."  hp "..run.hp.."/"..run.max_hp, 2, 10, 10)
-		for d in all(shown) do
-			d:drw()
-			local p = "$"..d.kind.price
-			print(p, d.x - #p * 2 + 1, d.y + 10, d:is_on() and 10 or 8)
+		txt("$"..run.coins, 127, 2, 7, "r")
+		line(0, 11, 127, 11, 5)
+		for c in all(cards) do
+			drw_card(_ENV, c)
 		end
-		rect(2, 58, 125, 93, 5)
-		if f.cur and f.cur:is(die) then
-			info(_ENV, f.cur)
-		else
-			print("hover a die to see it", 6, 74, 5)
-		end
-		print("your dice", 2, 96, 5)
+		if #cards == 0 then print("sold out", 48, 37, 5) end
+		line(0, 66, 127, 66, 5)
+		print("your dice", 2, 70, 6)
+		if #run.bag == 0 then print("buy a die to start", 2, 82, 5) end
 		for d in all(run.bag) do
 			d:drw()
 		end
+		line(0, 95, 127, 95, 5)
+		print("you", 2, 114, 6)
+		hp_bar(16, 114, 78, run.hp, run.hp, run.max_hp, 7)
+		reroll_btn:drw()
 		fight_btn:drw()
+		hover_tip(f)
 		f:drw()
 	end
 })

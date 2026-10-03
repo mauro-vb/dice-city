@@ -34,3 +34,11 @@ function frames(first, last)
     end
     return arr
 end
+
+-- write a hex pixel string (one char per pixel, row by row) into the spritesheet
+-- usage: gfx_str(0, 64, 54, "eee0...") -- then sspr / mspr it like any sprite
+function gfx_str(x0, y0, w, s)
+    for i = 1, #s do
+        sset(x0 + (i - 1) % w, y0 + (i - 1) \ w, tonum("0x" .. s[i]))
+    end
+end

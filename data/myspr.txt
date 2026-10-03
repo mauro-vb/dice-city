@@ -1,1 +1,1 @@
-myspr=split2d"0,0,8,8,0,0"
+myspr=split2d"0,0,54,54,27,27"

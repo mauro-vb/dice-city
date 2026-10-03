@@ -16,13 +16,24 @@ build:
 run: build
 	$(PICO8) $(CART)
 
-# run tests/test_*.lua headless against the game code; fails on FAIL or
-# runtime error. snap("name") calls in tests end up in tests/snaps/name.png
+# run every test headless, one cart per test (game + harness + one test, see
+# build.py), so the tests never push a cart past 8192 tokens. a cart that
+# doesn't finish in TEST_TIMEOUT seconds (e.g. "program too large", which makes
+# pico8 hang) counts as a failure. snap("name") -> tests/snaps/name.png
+TEST_TIMEOUT ?= 60
 test:
 	python3 build.py --test --name "$(PROJECT_NAME)" --author "$(AUTHOR)"
-	@$(PICO8) -x tests/run.p8 > tests/.last_run.log 2>&1; grep -v "^snap " tests/.last_run.log
-	@python3 tests/snap.py
-	@! grep -v "^snap " tests/.last_run.log | grep -qiE "fail|error"
+	@: > tests/.last_run.log
+	@for c in tests/run_*.p8; do \
+		timeout $(TEST_TIMEOUT) $(PICO8) -x $$c > tests/.cart.log 2>&1 \
+			|| echo "FAIL $$c: timed out or crashed" >> tests/.cart.log; \
+		grep -q "too large" tests/.cart.log && grep -h "tokens" tests/.cart.log | sed "s|^|FAIL $$c: too large |" >> tests/.cart.log; \
+		cat tests/.cart.log >> tests/.last_run.log; \
+	done; rm -f tests/.cart.log
+	@python3 tests/snap.py > /dev/null
+	@grep -E "^FAIL|error" tests/.last_run.log || true
+	@awk '/^ok /{split($$2, a, "/"); p += a[1]; t += a[2]} END {print "ok " p "/" t}' tests/.last_run.log
+	@! grep -qiE "^fail|error" tests/.last_run.log
 
 # single-file, comment-free build/<name>.p8 -- use this one to export
 # (.p8.png / html / binaries) or upload, since comments count toward the

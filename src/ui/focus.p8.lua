@@ -40,6 +40,7 @@ focus = class:extend({
 		return false
 	end,
 
+	-- nearest usable item that way; prefers items inside a 45° cone
 	move = function(_ENV, dx, dy)
 		local best, best_s = false, 32767
 		for it in all(items) do
@@ -51,8 +52,10 @@ focus = class:extend({
 				local ox, oy = it.x - cur.x, it.y - cur.y
 				local main = ox * dx + oy * dy
 				local cross = abs(ox * dy) + abs(oy * dx)
-				if main > 0 and main >= cross and main + 2 * cross < best_s then
-					best, best_s = it, main + 2 * cross
+				local s = main + 2 * cross
+				if main < cross then s += 1000 end
+				if main > 0 and s < best_s then
+					best, best_s = it, s
 				end
 			end
 		end
@@ -68,9 +71,18 @@ focus = class:extend({
 		end
 	end,
 
+	-- where the carried item is drawn: at the mouse, or above cur for keys
+	held_pos = function(_ENV)
+		if mouse_on then return mx, my end
+		if cur then return cur.x, cur.y - 10 end
+		return held.x, held.y
+	end,
+
 	-- drop on cur if it takes the held item; true if dropped
+	-- the item starts from where it was drawn, so it can glide into place
 	drop = function(_ENV)
 		if not (cur and cur.accepts and cur:accepts(held)) then return false end
+		held.x, held.y = held_pos(_ENV)
 		cur:on_drop(held)
 		held = false
 		return true
@@ -124,15 +136,11 @@ focus = class:extend({
 	drw = function(_ENV)
 		if cur then
 			local x0, y0 = cur.x - cur.w / 2 - 1, cur.y - cur.h / 2 - 1
-			rect(x0, y0, x0 + cur.w + 1, y0 + cur.h + 1, 10)
+			rect(x0, y0, x0 + cur.w + 1, y0 + cur.h + 1, 7)
 		end
 		if held then
 			local ox, oy = held.x, held.y
-			if mouse_on then
-				held.x, held.y = mx, my
-			elseif cur then
-				held.x, held.y = cur.x, cur.y - 10
-			end
+			held.x, held.y = held_pos(_ENV)
 			held:drw()
 			held.x, held.y = ox, oy
 		end

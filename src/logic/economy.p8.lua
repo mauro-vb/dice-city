@@ -1,23 +1,37 @@
+-- offers can repeat
 function gen_offers(st)
-	local pool = shuffle(concat(st.pool, {}))
 	local offers = {}
-	for i = 1, min(st.offers, #pool) do
-		add(offers, pool[i])
+	for i = 1, st.offers do
+		add(offers, rnd(st.pool))
 	end
 	return concat(offers, st.always)
 end
 
--- rolls every die and adds up the values
+-- unused dice were rolled with the rest: their values become coins
 function leftover_coins(dice)
 	local sum = 0
 	for d in all(dice) do
-		sum += roll_die(d)
+		sum += d.value or 0
 	end
 	return sum
 end
 
-function buy(kind)
-	if not run:spend(kind.price) then return false end
-	run:add_die(kind)
-	return true
+-- potion only helps when you're hurt
+function can_buy(k)
+	return run.coins >= k.price and (k != potion or run.hp < run.max_hp)
+end
+
+-- returns the new die for dice, true for items, false if you can't
+function buy(k)
+	if not can_buy(k) then return false end
+	run:spend(k.price)
+	if k == potion then
+		run:heal(5)
+		return true
+	end
+	if k == token then
+		run.extra_rerolls += 1
+		return true
+	end
+	return run:add_die(k)
 end
