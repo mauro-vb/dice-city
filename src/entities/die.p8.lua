@@ -117,10 +117,10 @@ die = selectable:extend({
 		if #faces == 3 then
 			trifill(x, yy - 8, 18, 16, body)
 			-- left side drawn twice: a thicker edge
-			line(x, yy - 8, x - 9, yy + 7, 5)
-			line(x - 1, yy - 8, x - 9, yy + 7, 5)
+			--line(x, yy - 8, x - 9, yy + 7, 5)
+			line(x - 1, yy - 8, x - 10, yy + 7, 5)
 			line(x, yy - 8, x + 9, yy + 7, 5)
-			line(x - 9, yy + 7, x + 9, yy + 7, 5)
+			line(x - 9, yy + 7, x + 8, yy + 7, 5)
 		else
 			rrectfill(x - 8, yy - 8, 16, 16, 3, body)
 			rrect(x - 8, yy - 8, 16, 16, 3, 5)

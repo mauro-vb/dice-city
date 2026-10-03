@@ -11,6 +11,7 @@ __lua__
 #include src/ui/bars.p8.lua
 #include src/ui/button.p8.lua
 #include src/ui/focus.p8.lua
+#include src/ui/item_slot.p8.lua
 #include src/ui/tooltip.p8.lua
 #include src/utils/color_settings.p8.lua
 #include src/utils/cursor.p8.lua
@@ -22,13 +23,7 @@ __lua__
 #include data/enemy_test.txt
 #include data/myspr.txt
 #include src/particles/particle.p8.lua
-#include src/particles/particle_ball.p8.lua
 #include src/particles/particle_circle.p8.lua
-#include src/particles/particle_oval.p8.lua
-#include src/particles/particle_rect.p8.lua
-#include src/particles/particle_ring.p8.lua
-#include src/particles/particle_spark.p8.lua
-#include src/particles/particle_sprite.p8.lua
 #include src/particles/particle_text.p8.lua
 #include src/entities/die.p8.lua
 #include src/entities/enemy.p8.lua

@@ -8,6 +8,8 @@ function tip_box(it, w, h, below, c)
 	if x + w > 128 then x = it.x - it.w / 2 - 3 - w end
 	if below then x, y = it.x - w / 2, it.y + it.h / 2 + 2 end
 	x, y = mid(0, x, 128 - w), mid(0, y, 128 - h)
+	-- focus won't hover through it (see focus.under)
+	tip_area = {x, y, x + w - 1, y + h - 1}
 	rectfill(x, y, x + w - 1, y + h - 1, 0)
 	rect(x, y, x + w - 1, y + h - 1, 6)
 	return x, y
@@ -50,9 +52,11 @@ function item_tip(it, k)
 end
 
 -- tip for whatever focus hovers: a die, or a shop card (die or item, tip below)
+-- only after half a second on the same item
 function hover_tip(f)
+	tip_area = false
 	local it = f.cur
-	if f.held or not it then return end
+	if f.held or not it or f.hover_t < 30 then return end
 	local s = it.shows
 	if s then
 		if s.faces then return die_tip(it, s, true) end

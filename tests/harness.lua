@@ -48,6 +48,7 @@ function boot()
     scene.current = nil
     tween = ptween()
     freeze_frames = 0
+    srand(42) -- the game seeds randomly; tests stay repeatable
     _init()
 end
 

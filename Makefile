@@ -28,6 +28,7 @@ test:
 		timeout $(TEST_TIMEOUT) $(PICO8) -x $$c > tests/.cart.log 2>&1 \
 			|| echo "FAIL $$c: timed out or crashed" >> tests/.cart.log; \
 		grep -q "too large" tests/.cart.log && grep -h "tokens" tests/.cart.log | sed "s|^|FAIL $$c: too large |" >> tests/.cart.log; \
+		grep -q "^ok " tests/.cart.log || echo "FAIL $$c: no result ($$(grep -v '^snap \|^RUNNING' tests/.cart.log | head -1))" >> tests/.cart.log; \
 		cat tests/.cart.log >> tests/.last_run.log; \
 	done; rm -f tests/.cart.log
 	@python3 tests/snap.py > /dev/null

@@ -34,8 +34,24 @@ shop = scene:extend({
 			d:move_to(11 + (i - 1) * gap, 84)
 			f:item(d)
 		end
+		-- inventory: only potions can be used in the shop
+		inv = {}
+		for i = 1, inv_size do
+			add(inv, f:item(item_slot:new({
+				x = 81 + i * 13, y = 119,
+				-- potions can be drunk here too
+				on_press = function()
+					if use_item(i) then build(_ENV) end
+				end,
+				enabled = function()
+					local s = run.items[i]
+					return s and s.k == potion and can_use(i)
+				end,
+			})))
+			inv[i]:set(run.items[i])
+		end
 		reroll_btn = f:item(button:new({
-			x = 104, y = 104, w = 44,
+			x = 65, y = 103, w = 44,
 			on_press = function()
 				if not run:spend(reroll_cost) then return end
 				offers = gen_offers(cur_stage())
@@ -45,7 +61,7 @@ shop = scene:extend({
 			enabled = function() return run.coins >= reroll_cost end,
 		}))
 		fight_btn = f:item(button:new({
-			label = "fight", x = 112, y = 118,
+			label = "fight", x = 107, y = 103, w = 38,
 			on_press = function()
 				next_stage()
 				scene:load(placement)
@@ -79,8 +95,14 @@ shop = scene:extend({
 		txt("$"..k.price, c.x, y0 + 36, run.coins >= k.price and 7 or 8, "c")
 	end,
 
-	-- potion: a bottle with red inside; reroll token: a die outline with +1
+	-- potion: a bottle with red inside; bomb: a ball with a red fuse;
+	-- reroll token: a die outline with +1
 	drw_icon = function(k, x, y)
+		if k == bomb then
+			circfill(x - 1, y + 2, 6, 6)
+			line(x + 3, y - 4, x + 5, y - 7, 8)
+			return
+		end
 		if k == potion then
 			rectfill(x - 2, y - 8, x + 1, y - 4, 6)
 			circfill(x, y + 2, 6, 6)
@@ -107,10 +129,11 @@ shop = scene:extend({
 			d:drw()
 		end
 		line(0, 95, 127, 95, 5)
-		print("you", 2, 114, 6)
-		hp_bar(16, 114, 78, run.hp, run.hp, run.max_hp, 7)
+		hp_bar(2, 115, 44, run.hp, run.hp, run.max_hp, 7)
+		drw_group(inv)
 		reroll_btn:drw()
 		fight_btn:drw()
+		f:drw_frame()
 		hover_tip(f)
 		f:drw()
 	end

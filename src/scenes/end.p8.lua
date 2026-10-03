@@ -20,6 +20,7 @@ game_over = scene:extend({
 		txt(run.won and "you win!" or "game over", 64, 40, run.won and 7 or 8, "c", true)
 		txt("stage "..run.stage_i, 64, 50, 6, "c")
 		title_btn:drw()
+		f:drw_frame()
 		f:drw()
 	end
 })

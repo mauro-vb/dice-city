@@ -5,14 +5,13 @@ player = game_object:extend({
 		hp = 20
 		max_hp = 20
 		coins = 20
-		rerolls = 1
-		rerolls_left = 1
-		extra_rerolls = 0
 		stage_i = 0
 		won = false
 		base = {atk = 1, spd = 1, def = 0}
 		slots = {atk = {}, spd = {}, def = {}}
 		bag = {}
+		-- every run starts with one reroll
+		items = {{k = token, n = 1}}
 	end,
 	place = function(_ENV, d, s)
 		unplace(_ENV, d)
@@ -24,12 +23,6 @@ player = game_object:extend({
 			del(slots[d.slot], d)
 		end
 		d.slot = false
-	end,
-	cycle = function(_ENV, d)
-		if not d.slot then return place(_ENV, d, "atk") end
-		if d.slot == "atk" then return place(_ENV, d, "spd") end
-		if d.slot == "spd" then return place(_ENV, d, "def") end
-		unplace(_ENV, d)
 	end,
 	get_stat = function(_ENV, s)
 		local sum = base[s]
@@ -51,17 +44,6 @@ player = game_object:extend({
 		for d in all(bag) do
 			roll_die(d)
 		end
-		rerolls_left = rerolls + extra_rerolls
-		extra_rerolls = 0
-	end,
-	reroll = function(_ENV, d)
-		if rerolls_left <= 0 then return false end
-		roll_die(d)
-		rerolls_left -= 1
-		return true
-	end,
-	placed = function(_ENV)
-		return #bag - #unused(_ENV)
 	end,
 	unused = function(_ENV)
 		local u = {}
@@ -70,14 +52,8 @@ player = game_object:extend({
 		end
 		return u
 	end,
-	dead = function(_ENV)
-		return hp <= 0
-	end,
 	heal = function(_ENV, value)
 		hp = min(max_hp, hp + value)
-	end,
-	hurt = function(_ENV, value)
-		hp = max(0, hp - value)
 	end,
 	earn = function(_ENV, value)
 		coins += value
@@ -91,9 +67,5 @@ player = game_object:extend({
 		local d = die:new({kind = kind})
 		add(bag, d)
 		return d
-	end,
-	remove_die = function(_ENV, d)
-		unplace(_ENV, d)
-		del(bag, d)
 	end,
 })

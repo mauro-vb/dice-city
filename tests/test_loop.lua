@@ -43,10 +43,13 @@ local function fight(snaps)
 	local d = run.bag[1]
 	if not d.slot then drag(d, placement.cols.atk) end
 	check(d.slot == "atk", "dragged onto atk")
-	click(placement.roll_btn)
+	click(placement.act_btn)
 	check(placement.phase == "rolled", "rolled")
-	click(placement.fight_btn)
+	click(placement.act_btn)
 	check(placement.phase == "intro", "intro: columns out, enemy in")
+	check(count(placement.f.items, placement.cols.atk) == 0, "columns can't be hovered")
+	check(not d.slot and #run.slots.atk == 0, "dice back in the bag as soon as fight is pressed")
+	check(placement.b.stats.atk > run.base.atk or d.value == 0, "battle kept the placed stats")
 	step(40)
 	if snaps then snap("fight") end
 	for _ = 1, 6000 do
@@ -55,7 +58,7 @@ local function fight(snaps)
 	end
 	check(placement.phase == "done", "fight finished")
 	if snaps then snap("fight_done") end
-	click(placement.fight_btn) -- now "next"
+	click(placement.act_btn) -- now "next"
 	settle()
 end
 
@@ -64,7 +67,10 @@ test("opening shop: fight locked until you buy", function()
 	check(not shop.fight_btn:is_on(), "locked")
 	mouse(shop.cards[1].x, shop.cards[1].y) step()
 	check(shop.f.cur == shop.cards[1], "hover shows the offer")
-	mouse(shop.cards[1].x, shop.cards[1].y + 1) step()
+	step(10)
+	check(shop.f.hover_t < 30, "no tooltip yet")
+	step(25)
+	check(shop.f.hover_t >= 30, "tooltip after half a second")
 	snap("opening_shop")
 	click(shop.cards[1])
 	check(#run.bag == 1 and run.coins < 20 and shop.fight_btn:is_on(), "bought")
@@ -98,8 +104,8 @@ test("keys only: pick up, move, drop, glide", function()
 	step(2)
 	press(5) -- start
 	press(5) -- buy the first offer
-	press(3) -- down to reroll
-	press(3) -- down to fight
+	press(3) -- down to reroll offers
+	press(1) -- right to fight
 	press(5)
 	check(scene.current == placement, "keys -> placement")
 	settle()
@@ -125,19 +131,22 @@ test("opening shop -> stage 1 -> shop -> stage 2", function()
 	leave_shop()
 	check(run.stage_i == 2, "stage 2")
 	check(not run.bag[1].value, "dice cleared")
+	check(not run.bag[1].slot and #run.slots.atk == 0, "dice back in the bag")
 end)
 
-test("roll shows bag coins; any die can be rerolled once", function()
+test("roll shows bag coins; reroll item: press it, then a die", function()
 	start_run()
 	click(shop.cards[1])
 	click(shop.cards[1])
 	leave_shop()
 	local a, b = run.bag[1], run.bag[2]
 	drag(a, placement.cols.atk)
-	click(placement.roll_btn)
+	click(placement.act_btn)
 	check(b.value and leftover_coins(run:unused()) == b.value, "bag die rolled")
+	click(placement.inv[1])
+	check(placement.aim == 1, "aiming")
 	click(b)
-	check(run.rerolls_left == 0, "rerolled the bag die")
+	check(not placement.aim and #run.items == 0, "used on the bag die")
 	drag(a, placement.cols.def)
 	check(a.slot == "atk", "can't move dice after rolling")
 end)
@@ -165,4 +174,23 @@ test("a full run beats the boss", function()
 	fight()
 	check(scene.current == game_over and run.won, "boss -> win")
 	snap("win")
+end)
+
+test("drink a potion mid-fight by clicking its slot", function()
+	start_run()
+	leave_shop(true)
+	run.hp = 10
+	run.items = {{k = potion, n = 2}}
+	run.base = {atk = 0, spd = 1, def = 50}
+	drag(run.bag[1], placement.cols.atk)
+	click(placement.act_btn)
+	click(placement.act_btn)
+	for _ = 1, 100 do
+		if placement.phase == "fight" then break end
+		step()
+	end
+	local before = placement.b.p_hp
+	click(placement.inv[1])
+	check(placement.b.p_hp == before + 5 and run.items[1].n == 1, "healed mid-fight, one left")
+	snap("potion")
 end)

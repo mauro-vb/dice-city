@@ -18,6 +18,7 @@ title = scene:extend({
 		cls(0)
 		txt("autoroll", 64, 50, 7, "c", true)
 		start_btn:drw()
+		f:drw_frame()
 		f:drw()
 	end
 })

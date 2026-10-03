@@ -15,6 +15,10 @@ focus = class:extend({
 		dragging = false
 		mouse_on = false
 		mx, my = cursor.x, cursor.y
+		-- frames the same item has been hovered (tooltips wait for it)
+		hover_t, last = 0, false
+		-- global, written by the tooltip (a field here would hide it)
+		global.tip_area = false
 	end,
 
 	item = function(_ENV, it)
@@ -30,7 +34,10 @@ focus = class:extend({
 	end,
 
 	-- topmost item under the point; while holding, only drop targets
+	-- over an open tooltip nothing behind it gets hovered: cur stays
 	under = function(_ENV, px, py)
+		local a = tip_area
+		if a and px >= a[1] and px <= a[3] and py >= a[2] and py <= a[4] then return cur end
 		for i = #items, 1, -1 do
 			local it = items[i]
 			if it != held and it:contains(px, py) and (not held or usable(_ENV, it)) then
@@ -93,10 +100,13 @@ focus = class:extend({
 		if cursor.x != mx or cursor.y != my then
 			mx, my = cursor.x, cursor.y
 			mouse_on = true
-			cur = under(_ENV, mx, my)
 		end
+		-- every frame, not only when the mouse moves: items glide under a still mouse
+		if mouse_on then cur = under(_ENV, mx, my) end
 		upd_mouse(_ENV)
 		upd_keys(_ENV, x_hit, o_hit)
+		hover_t = cur == last and hover_t + 1 or 0
+		last = cur
 	end,
 
 	upd_mouse = function(_ENV)
@@ -133,11 +143,18 @@ focus = class:extend({
 		if o_hit then held = false end
 	end,
 
+	-- the hover frame: draw it before cards (tooltip, result box) so they cover it
+	drw_frame = function(_ENV)
+		-- frame only on things you can pick up, press or drop onto right now:
+		-- usable = has an action, is_on = the action is allowed (e.g. fight
+		-- during the fight, an empty item slot)
+		if not cur or not usable(_ENV, cur) or not cur:is_on() then return end
+		local x0, y0 = cur.x - cur.w / 2 - 1, cur.y + (cur.hop or 0) - cur.h / 2 - 1
+		rect(x0, y0, x0 + cur.w + 1, y0 + cur.h + 1, 7)
+	end,
+
+	-- the carried item and the pointer: always on top, draw last
 	drw = function(_ENV)
-		if cur then
-			local x0, y0 = cur.x - cur.w / 2 - 1, cur.y - cur.h / 2 - 1
-			rect(x0, y0, x0 + cur.w + 1, y0 + cur.h + 1, 7)
-		end
 		if held then
 			local ox, oy = held.x, held.y
 			held.x, held.y = held_pos(_ENV)

@@ -4,9 +4,8 @@
 --
 -- this file is just the base: age/lifecycle/movement (dopart) and the
 -- `particle` class itself. actual shapes live alongside it in this same
--- src/particles/ directory -- particle_circle.p8.lua, particle_rect.p8.lua,
--- particle_oval.p8.lua, particle_spark.p8.lua, particle_ring.p8.lua,
--- particle_text.p8.lua, particle_sprite.p8.lua -- each just a small pdrw.
+-- src/particles/ directory -- particle_circle.p8.lua (dots) and
+-- particle_text.p8.lua (numbers, labels) -- each just a small pdrw.
 -- drop a new particle_whatever.p8.lua in this folder to add a shape --
 -- build.py picks it up automatically. "particle.p8.lua" always sorts first
 -- in this folder (a "." sorts before a "_"), so the base class is always
@@ -20,7 +19,7 @@
 --   drw_group(parts)
 --
 --   circlep({ x = 64, y = 64, c = 8, size = 3, sy = -0.5, maxage = 20, onend = "fade" })
---   -- see the other particle_*.p8.lua files in this folder for more shapes
+--   textp({ x = 64, y = 64, c = 7, text = "-3", sy = -0.5, maxage = 30 })
 --
 -- key particle fields (all optional, set per-instance, shared by every shape):
 --   x, y, c, size          starting position, color, size

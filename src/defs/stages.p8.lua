@@ -1,6 +1,6 @@
 -- pool entries repeat to weight them: items are about 1 in 3 offers
 function stage_def(t)
-	return merge({reward = 0, boss = false, offers = 3, pool = {d6, d6, d3, d3, potion, token}, always = {}}, t)
+	return merge({reward = 0, boss = false, offers = 3, pool = {d6, d6, d3, d3, potion, token, bomb}, always = {}}, t)
 end
 
 stages = {

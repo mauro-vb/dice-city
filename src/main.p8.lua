@@ -5,7 +5,6 @@ tween_pause = false
 t = 0
 
 function _init()
-	srand(42) -- TESTING PURPOSES
     color_settings()
     scene:load(title)
 end

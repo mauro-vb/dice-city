@@ -6,9 +6,10 @@ local function new_player()
 	return p
 end
 
-test("a new run starts with no dice", function()
+test("a new run starts with no dice and one reroll", function()
 	local p = player:new()
 	check(#p.bag == 0 and p.coins == 20 and p.stage_i == 0)
+	check(#p.items == 1 and p.items[1].k == token and p.items[1].n == 1)
 end)
 
 test("place and unplace never duplicate", function()
@@ -19,15 +20,6 @@ test("place and unplace never duplicate", function()
 	check(#p.slots.atk == 0 and #p.slots.spd == 1)
 	p:unplace(d)
 	check(#p.slots.spd == 0 and #p.bag == 4 and not d.slot)
-end)
-
-test("cycle goes atk > spd > def > none", function()
-	local p = new_player()
-	local d = p.bag[1]
-	p:cycle(d) check(d.slot == "atk")
-	p:cycle(d) check(d.slot == "spd")
-	p:cycle(d) check(d.slot == "def")
-	p:cycle(d) check(not d.slot)
 end)
 
 test("get_stat includes the base", function()
@@ -45,23 +37,6 @@ test("roll_all rolls the whole bag", function()
 	p:place(p.bag[1], "atk")
 	p:roll_all()
 	check(p.bag[1].value and p.bag[2].value and p.bag[4].value)
-end)
-
-test("reroll works on bag dice too", function()
-	local p = new_player()
-	p:roll_all()
-	check(p:reroll(p.bag[3]) and p.rerolls_left == 0)
-end)
-
-test("one reroll per fight", function()
-	local p = new_player()
-	local d = p.bag[1]
-	p:place(d, "def")
-	p:roll_all()
-	check(p:reroll(d))
-	check(not p:reroll(d))
-	p:roll_all()
-	check(p:reroll(d))
 end)
 
 test("new players don't share dice", function()

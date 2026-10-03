@@ -9,7 +9,7 @@ test("charge bars keep filling after the first hit", function()
 	scene:load(placement)
 	placement.phase = "rolled"
 	-- press fight like a player: start_fight must run inside the frame
-	local b = placement.fight_btn
+	local b = placement.act_btn
 	mouse(b.x, b.y, 1) step()
 	mouse(b.x, b.y, 0)
 	local seen = 0

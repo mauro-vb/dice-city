@@ -38,26 +38,6 @@ function concat(a, b)
 	return c
 end
 
-function join(t, sep)
-	local s = ""
-	for i = 1, #t do
-		s ..= (i > 1 and sep or "")..t[i]
-	end
-	return s
-end
-
-function shuffle(tbl)
-    for i = #tbl, 2, -1 do
-        local j = flr(rnd(i) + 1)
-        tbl[i], tbl[j] = tbl[j], tbl[i]
-    end
-    return tbl
-end
-
-function rndrange(low, high)
-    return low + rnd(high - low)
-end
-
 -- calls :upd() on every item in group -- entities, particles, anything game_object-based
 function upd_group(group)
     for e in all(group) do

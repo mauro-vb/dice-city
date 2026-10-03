@@ -1,3 +1,16 @@
+-- runs a battle to the end and collects its hits (with their tick)
+local function fight(p, foe)
+	local b = battle:new({p = p, foe = foe})
+	local events = {}
+	while not b:over() do
+		for ev in all(b:step()) do
+			ev.tick = b.tick
+			add(events, ev)
+		end
+	end
+	return {events = events, win = b:won(), hp_left = b.p_hp}
+end
+
 local function fighter(atk, spd, def)
 	local p = player:new()
 	p.base = {atk = atk, spd = spd, def = def}
@@ -8,7 +21,7 @@ test("a fixed fight gives the expected events", function()
 	-- both bars +10 a tick: both act every 10 ticks, player first
 	local p = fighter(3, 5, 0)
 	local foe = {name = "dummy", hp = 6, atk = 2, spd = 5, def = 1}
-	local r = p:fight(foe)
+	local r = fight(p, foe)
 	check(#r.events == 5)
 	check(r.events[1].who == "p" and r.events[1].dmg == 2 and r.events[1].e_hp == 4)
 	check(r.events[2].who == "e" and r.events[2].p_hp == 18)
@@ -17,7 +30,7 @@ end)
 
 test("def can block every point of damage", function()
 	local p = fighter(3, 1, 3)
-	local r = p:fight({hp = 6, atk = 2, spd = 1, def = 0})
+	local r = fight(p, {hp = 6, atk = 2, spd = 1, def = 0})
 	for ev in all(r.events) do
 		if ev.who == "e" then check(ev.dmg == 0, "enemy hit for "..ev.dmg) end
 	end
@@ -26,25 +39,43 @@ end)
 
 test("def reduces damage by its value", function()
 	local p = fighter(3, 1, 1)
-	local r = p:fight({hp = 30, atk = 5, spd = 50, def = 0})
+	local r = fight(p, {hp = 30, atk = 5, spd = 50, def = 0})
 	check(r.events[1].who == "e" and r.events[1].dmg == 4)
 end)
 
 test("nobody can hurt anybody: a loss at once", function()
 	local p = fighter(1, 1, 5)
-	local r = p:fight({hp = 6, atk = 2, spd = 1, def = 4})
+	local r = fight(p, {hp = 6, atk = 2, spd = 1, def = 4})
 	check(not r.win and #r.events == 0 and r.hp_left == 20)
 end)
 
 test("player wins ties", function()
 	local p = fighter(1, 1, 0)
 	p.hp = 1
-	local r = p:fight({name = "twin", hp = 1, atk = 1, spd = 1, def = 0})
+	local r = fight(p, {name = "twin", hp = 1, atk = 1, spd = 1, def = 0})
 	check(r.win and #r.events == 1)
 end)
 
 test("fight changes nothing", function()
 	local p = fighter(3, 3, 0)
-	p:fight(enemy1)
+	fight(p, enemy1)
 	check(p.hp == 20 and enemy1.hp == 6)
+end)
+
+test("ticks_to says when a side hits next", function()
+	local b = battle:new({p = fighter(1, 5, 0), foe = {hp = 9, atk = 1, spd = 5, def = 0}})
+	check(b:ticks_to("p") == 10)
+	for _ = 1, 4 do b:step() end
+	check(b:ticks_to("p") == 6)
+end)
+
+test("heal mid-fight changes the outcome", function()
+	local p = fighter(1, 1, 0)
+	p.hp = 2
+	local foe = {hp = 3, atk = 2, spd = 1, def = 0}
+	check(not fight(p, foe).win, "dies without the heal")
+	local b = battle:new({p = p, foe = foe})
+	b:heal(5)
+	while not b:over() do b:step() end
+	check(b:won() and p.hp == 2, "survives with it, player untouched")
 end)
