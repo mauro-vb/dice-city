@@ -185,7 +185,8 @@ test("a full run beats the boss", function()
 	start_run()
 	leave_shop(true)
 	run.base = {atk = 50, spd = 1, def = 50}
-	for i = 1, 5 do
+	-- every stage before the boss
+	for i = 1, #stages - 1 do
 		fight()
 		leave_shop()
 	end

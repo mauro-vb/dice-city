@@ -57,9 +57,9 @@ test("player wins ties", function()
 end)
 
 test("fight changes nothing", function()
-	local p = fighter(3, 3, 0)
+	local p, hp = fighter(3, 3, 0), enemy1.hp
 	fight(p, enemy1)
-	check(p.hp == 20 and enemy1.hp == 6)
+	check(p.hp == 20 and enemy1.hp == hp)
 end)
 
 test("ticks_to says when a side hits next", function()

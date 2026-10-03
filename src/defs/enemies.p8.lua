@@ -1,2 +1,21 @@
 -- art = index into myspr (data/myspr.txt)
-defs("id,hp,atk,spd,def,art,face_art", "enemy1,6,2,2,0,1,8|enemy2,8,3,5,0,2,9|enemy3,12,3,2,2,3,10|enemy4,8,2,10,0,4,11|enemy5,16,5,3,3,5,12|enemy6,24,6,4,2,6,13")
+-- the seven fights, one archetype each: every one is beaten by a different dice
+-- placement, so reading the enemy is the puzzle. numbers are tuned with
+-- tools/balance.py (keep its copy in sync); "beat it" is what its best
+-- placement looks like there.
+-- a field with ";" is a stat that rolls one of its values when you roll (the
+-- enemy's die): the header shows its range until then. list it low to high
+--   enemy1 tourist     warm-up, weak at everything. anything works
+--   enemy2 pickpocket  fast (a hit every 5 ticks), weak hits: def 3 makes it
+--                      harmless
+--   enemy3 bouncer     a wall: atk 6 or less does nothing. stack atk
+--   enemy4 gambler     all in on attack: rolls 3 or 8, no def. block 8 or
+--                      race it
+--   enemy5 card sharp  glass cannon: one hit kills you, one hit (atk 9+)
+--                      kills it. spd 8+ strikes first (ties go to you)
+--   enemy6 loan shark  slow (a swing every 20 ticks) but 21 a hit: kill it
+--                      before its first swing, or get def 2+ to live through
+--                      one and kill it before the second
+--   enemy7 the house   final boss, rolls every stat: atk over its def (4-9)
+--                      and def against its 9-14 a hit, all at once
+defs("id,name,hp,atk,spd,def,art,face_art", "enemy1,tourist,8,2,1,0,1,8|enemy2,pickpocket,14,3,14,0,5,12|enemy3,bouncer,24,4,2,6,2,9|enemy4,gambler,24,3;8,6,0,6,13|enemy5,card sharp,8,20,8,1,7,14|enemy6,loan shark,24,21,0,3,3,10|enemy7,the house,26,9;10;11;12;13;14,2;3;4;5;6;7,4;5;6;7;8;9,4,11")

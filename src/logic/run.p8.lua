@@ -9,10 +9,6 @@ function cur_stage()
 	return stages[run.stage_i]
 end
 
-function foe_label()
-	return cur_stage().boss and "boss" or "enemy "..run.stage_i
-end
-
 -- applies a finished battle; returns the coins gained and the next scene
 function finish_fight(b)
 	local st = cur_stage()

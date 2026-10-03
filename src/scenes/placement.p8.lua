@@ -45,6 +45,8 @@ placement = scene:extend({
 				-- values first, then the show: columns left to right, bottom die
 				-- first, bag dice last, each landing 10 frames after the one before
 				run:roll_all()
+				-- the enemy rolls with you (only some have stats that roll)
+				foe = roll_foe(foe)
 				local n = 0
 				for k in all(stat_names) do
 					for d in all(run.slots[k]) do
@@ -244,10 +246,16 @@ placement = scene:extend({
 		camera(sx, sy)
 		local hx = stage.hx
 		if stage.small_x > -15 then drw_foe(_ENV, foe.face_art, stage.small_x, 14) end
-		print(foe_label(), hx, 2, 7)
+		print(foe.name, hx, 2, 7)
 		hp_bar(hx, 9, 94, e_shown, bars.e_trail, foe.hp, 8, e_flash > 0)
 		charge_bar(hx, 17, 94, bars.e_charge.v)
-		print("atk"..foe.atk.." spd"..foe.spd.." def"..foe.def, hx, 22, 6)
+		-- a rolling stat shows its range until rolled: "a5-11 s8 d0"
+		local stats = ""
+		for k in all(stat_names) do
+			local v = foe[k]
+			stats ..= sub(k, 1, 1)..(type(v) == "table" and v[1].."-"..v[#v] or v).." "
+		end
+		print(stats, hx, 22, 6)
 		if aim then txt("pick a die", 127, 22, 8, "r") end
 		line(0, 29, 127, 29, dark)
 

@@ -22,3 +22,23 @@ test("min_max_table", function()
 	check(min_max_table({3, 1, 5}, "max") == 5)
 	check(min_max_table({3, 1, 5}, "min") == 1)
 end)
+
+test("an enemy's rolling stats roll into a copy", function()
+	local seen = {}
+	for _ = 1, 50 do
+		local f = roll_foe(enemy4)
+		check(f.atk == 3 or f.atk == 8, "gambler atk "..tostr(f.atk))
+		check(f.def == enemy4.def, "fixed stats copied")
+		seen[f.atk] = true
+	end
+	check(seen[3] and seen[8], "both values come up")
+	check(type(enemy4.atk) == "table", "the def itself is untouched")
+	check(roll_foe(enemy1).atk == enemy1.atk, "nothing rolls: same stats")
+end)
+
+test("every fight stage has a named enemy, the last is the boss", function()
+	for i = 1, #stages do
+		check(stages[i].enemy and stages[i].enemy.name, "stage "..i)
+		check(not stages[i].boss == (i < #stages), "boss only last")
+	end
+end)
