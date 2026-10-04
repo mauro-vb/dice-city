@@ -1,9 +1,16 @@
--- shop 1: 2 dice + 1 ench, shop 2: 1 die + 2 items, then 1 + 3. dice by
--- tier: + from stage 2, ++ from 3. offers can repeat
+-- a random kind from l, ordered by tier: the first n[1] at first, n[2] from
+-- stage 2, n[3] from stage 3
+function pick(l, n)
+	return l[flr(rnd(n[mid(1, run.stage_i, 3)])) + 1]
+end
+
+-- dice first, one enchantment last. shop 1: 2 dice + ench, shop 2: 1 die +
+-- 1 item + ench, then 1 die + 2 items + ench. offers can repeat
 function gen_offers()
 	local s, offers = run.stage_i, {}
-	for i = 1, s < 2 and 3 or 4 do
-		add(offers, i <= (s < 1 and 2 or 1) and dice_kinds[flr(rnd(min(9, max(3, 3 * s)))) + 1] or rnd(s < 1 and ench_kinds or item_kinds))
+	local n = s < 2 and 3 or 4
+	for i = 1, n do
+		add(offers, i == n and rnd(ench_kinds) or i <= (s < 1 and 2 or 1) and pick(dice_kinds, dice_tiers) or pick(item_kinds, item_tiers))
 	end
 	return offers
 end
@@ -35,15 +42,16 @@ end
 function buy(k)
 	if not can_buy(k) then return false end
 	run:spend(k.price)
-	if k.lvl then
-		for s in all(stat_names) do
-			run.base[s] += k.lvl
-		end
-		return true
-	end
 	if k.inv then
 		local s = stack_for(k)
 		if s then s.n += 1 else add(run.items, {k = k, n = 1}) end
+		return true
+	end
+	-- a level up
+	if k.up then
+		for s in all(stat_names) do
+			run.base[s] += k.up
+		end
 		return true
 	end
 	return run:add_die(k)
@@ -54,7 +62,7 @@ end
 -- potion: heals 5 when hurt (the fight's hp in a fight). bomb: 10 damage to
 -- the enemy, ignoring def, only in a fight. token: rerolls die d (scenes
 -- decide when: after rolling). double: a temporary copy of placed die d.
--- rig: +2 to a random face of die d, for good (d.rigged = 2 on that face).
+-- rig: +up to a random face of die d, for good (d.rigged = up on that face).
 -- an enchantment (has a col) becomes d.ench, replacing the old one
 inv_size, stack_max = 3, 5
 
@@ -88,10 +96,10 @@ function use_item(i, b, d)
 		local c = run:add_die(d.kind)
 		c.faces, c.rigged, c.value, c.face_i, c.temp, c.x, c.y = {unpack(d.faces)}, d.rigged, d.value, d.face_i, true, d.x, d.y
 		run:place(c, d.slot)
-	elseif s.k == rig then
+	elseif s.k.up then
 		local f = flr(rnd(#d.faces)) + 1
-		d.faces[f] += 2
-		d.rigged[f] = 2
+		d.faces[f] += s.k.up
+		d.rigged[f] = s.k.up
 	elseif s.k.col then
 		d.ench = s.k
 	elseif b then

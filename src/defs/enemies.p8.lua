@@ -12,18 +12,19 @@
 -- a field with ";" is a stat that rolls one of its values when you roll (the
 -- enemy's die): the header shows its range until then. list it low to high
 --   enemy1 tourist     warm-up, weak at everything. anything works
---   enemy2 pickpocket  fast (a hit every 5 ticks), weak hits: def 4 makes it
+--   enemy2 drunk       fast (a hit every 5 ticks), weak hits: def 4 makes it
 --                      harmless
 --   enemy3 bouncer     a wall: atk 7 or less does nothing, and it hits 6.
 --                      stack atk, with some def
 --   enemy4 gambler     all in on attack: rolls 4 or 12, no def. block 12,
 --                      or block 4 and race it (a wild die reads the roll)
---   enemy5 card sharp  glass cannon: one hit kills you, one hit (atk 12+)
---                      kills it. spd 8+ strikes first (ties go to you)
+--   enemy5 slot machine specialist  one spin (atk 100) kills you, but it's
+--                      slow (spd -3: a spin every 50 ticks). 35 hp: kill it
+--                      before its first spin
 --   enemy6 loan shark  slow (a swing every 20 ticks) but 22 a hit: kill it
 --                      before its first swing, or get def 3+ to live through
 --                      one and kill it before the second
---   enemy7 the house   final boss, rolls every stat: atk over its def (5-10)
+--   enemy7 the house   the casino's owner, final boss, rolls every stat: atk over its def (5-10)
 --                      and def against its 11-16 a hit, all at once
 defs("id,name,hp,atk,spd,def,art,face_art,walk_in,beaten,beat_you",
-	"enemy1,tHE tOURIST,8,2,1,0,7,14,hERE FOR\nPAIR-A-DICE!,tHIS PLACE\nIS DICEY,sOUVENIR\nACQUIRED!|enemy2,tHE dRUNK,16,4,14,0,5,12,**bELCHHHH**,sEEING\nDOUBLE\nSIXES...,hIC! i'M ON\nA ROLL!|enemy3,tHE bOUNCER,22,6,2,7,2,9,iM GON DICE\nYOU UP!,i GOT\nROLLED,yOU JUST\nGOT CUBED|enemy4,tHE gAMBLER,28,4;12,6,0,3,10,fEELING\nLUCKY?,i'LL WIN\nIT BACK!,rEAD 'EM\nAND WEEP|enemy5,tHE eLDER,35,100,-3,2,6,13,hAVE YOU\nSEEN MY\nDICE?,bACK IN MY\nDAY DICE HAD\n7 SIDES,rESPECT\nYOUR\nELDERS|enemy6,tHE lOAN sHARK,28,22,0,3,1,8,yOU OWE ME\nBIG TIME,kEEP THE\nCHANGE...,yOU'RE IN\nTOO DEEP|enemy7,tHE hOUSE,32,11;12;13;14;15;16,3;4;5;6;7;8,5;6;7;8;9;10,4,11,wELCOME TO\ndICE cITY,iMPOSSIBLE\nTHE ODDS!,rOLL AGAIN\nSOMETIME")
+	"enemy1,tHE tOURIST,8,2,1,0,7,14,hERE FOR\nPAIR-A-DICE!,tHIS PLACE\nIS DICEY,sOUVENIR\nACQUIRED!|enemy2,tHE dRUNK,16,4,14,0,5,12,**bELCHHHH**,sEEING\nDOUBLE\nSIXES...,hIC! i'M ON\nA ROLL!|enemy3,tHE bOUNCER,22,6,2,7,2,9,iM GON DICE\nYOU UP!,i GOT\nROLLED,yOU JUST\nGOT CUBED|enemy4,tHE gAMBLER,28,4;12,6,0,3,10,fEELING\nLUCKY?,i'LL WIN\nIT BACK!,rEAD 'EM\nAND WEEP|enemy5,sLOT mACHINE sPECIALIST,35,100,-3,2,6,13,tHREE\nCHERRIES\nCOMING UP!,tILT!\ntILT!,jACKPOT!|enemy6,tHE lOAN sHARK,28,22,0,3,1,8,yOU OWE ME\nBIG TIME,kEEP THE\nCHANGE...,yOU'RE IN\nTOO DEEP|enemy7,tHE hOUSE,32,11;12;13;14;15;16,3;4;5;6;7;8,5;6;7;8;9;10,4,11,mY CASINO\nMY RULES,iMPOSSIBLE\nTHE ODDS!,rOLL AGAIN\nSOMETIME")

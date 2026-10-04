@@ -228,9 +228,9 @@ test("enchant: becomes the die's ench, a new one replaces it", function()
 	check(#run.items == 0, "both used")
 end)
 
-test("rig marks its face +2", function()
+test("rig+ marks its face +2", function()
 	fresh()
-	run.items = {{k = rig, n = 1}}
+	run.items = {{k = rigp, n = 1}}
 	local d = run:add_die(d6)
 	use_item(1, false, d)
 	local n = 0

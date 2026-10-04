@@ -18,26 +18,21 @@ card = selectable:extend({
 })
 
 -- item k's icon centred on x, y at scale s: 1 on a shop card, .5 in an
--- inventory slot (src/ui/item_slot.p8.lua). double: two overlapping dice;
--- reroll token: a die outline with +1; beer (potion): myspr
--- region 17; rig: a white die with a red +2; level up: blue with +1/2/3; an
--- enchantment: a circle in its colour. bomb: no icon yet
+-- inventory slot (src/ui/item_slot.p8.lua). double: two overlapping filled
+-- dice; reroll, rig, level up: a filled die with a label; beer (potion):
+-- myspr region 17; an enchantment: a circle in its colour. bomb: no icon yet
 function item_icon(k, x, y, s)
 	if k == potion then
 		local m = myspr[17]
 		sspr(m[1], m[2], m[3], m[4], x - m[5] * s, y - m[6] * s, m[3] * s, m[4] * s)
 	elseif k == double then
-		rrect(x - 7 * s, y - 7 * s, 11 * s, 11 * s, 2 * s, 6)
-		rrect(x - 3 * s, y - 3 * s, 11 * s, 11 * s, 2 * s, 7)
-	elseif k == token then
-		rrect(x - 8 * s, y - 8 * s, 16 * s, 16 * s, 3 * s, 6)
-		print("+1", x - 3, y - 2, 7)
-	elseif k == rig then
-		rrect(x - 8 * s, y - 8 * s, 16 * s, 16 * s, 3 * s, 7)
-		print("+2", x - 3, y - 2, 8)
-	elseif k.lvl then
-		rrect(x - 8 * s, y - 8 * s, 16 * s, 16 * s, 3 * s, 12)
-		print("+"..k.lvl, x - 3, y - 2, 7)
+		rrectfill(x - 7 * s, y - 7 * s, 11 * s, 11 * s, 2 * s, 6)
+		rrectfill(x - 3 * s, y - 3 * s, 11 * s, 11 * s, 2 * s, 7)
+	elseif k == token or k.up then
+		-- a filled die with a label: reroll dark grey "?", rig white with a
+		-- red +up, level up blue +up
+		rrectfill(x - 8 * s, y - 8 * s, 16 * s, 16 * s, 3 * s, k.up and (k.inv and 7 or 12) or dark)
+		txt(k.up and "+"..k.up or "?", x, y - 2, k.up and k.inv and 8 or 7, "c")
 	elseif k.col then
 		circfill(x, y, 6 * s, k.col)
 	end

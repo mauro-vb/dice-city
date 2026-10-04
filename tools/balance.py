@@ -48,13 +48,19 @@ for _name, _top, _price in (("d3", 3, 1), ("d6", 6, 4), ("d8", 8, 6)):
 # enchantments (ENCH) go on a die (d["ench"], one per die): greedy = unused
 # pays 2x, grower = placed: lowest face +1 for good, wild = moved after the
 # roll, glass = rolls 2x and breaks 1 in 4 when the fight starts
-ITEMS = {"potion": 3, "bomb": 6, "reroll": 3, "double": 4, "rig": 4,
+ITEMS = {"potion": 3, "bomb": 6, "reroll": 3, "double": 4,
          "greedy": 4, "grower": 4, "wild": 4, "glass": 3}
 ENCH = ("greedy", "grower", "wild", "glass")
 # level ups: bought = every base stat + n for the rest of the run (never in
 # the inventory)
-LVL = {"lvl up": 1, "lvl up+": 2, "lvl up++": 3}
-ITEMS.update({"lvl up": 6, "lvl up+": 9, "lvl up++": 12})
+LVL = {"lvl up": 1, "lvl up+": 2}
+ITEMS.update({"lvl up": 6, "lvl up+": 9})
+# rigs: + this much to a random face of a die, for good
+RIG = {"rig": 1, "rig+": 2, "rig++": 3}
+ITEMS.update({"rig": 3, "rig+": 4, "rig++": 6})
+# the regular item pool in tier order (gen_offers / pick): the first 6 at
+# first, 8 from idx 2, all 9 from idx 3. enchantments: one per shop, last
+ITEM_TIERS = ["potion", "bomb", "reroll", "double", "rig", "lvl up", "rig+", "lvl up+", "rig++"]
 
 # src/defs/enemies.p8.lua -- a list is a stat that rolls one of its values
 ENEMIES = {
@@ -62,7 +68,7 @@ ENEMIES = {
     "drunk": dict(hp=16, atk=4, spd=14, defn=0),
     "bouncer":    dict(hp=22, atk=6, spd=2, defn=7),
     "gambler":    dict(hp=28, atk=[4, 12], spd=6, defn=0),
-    "elder":      dict(hp=35, atk=100, spd=-3, defn=2),
+    "slot machine":      dict(hp=35, atk=100, spd=-3, defn=2),
     "loan shark": dict(hp=28, atk=22, spd=0, defn=3),
     "the house":  dict(hp=32, atk=list(range(11, 17)), spd=list(range(3, 9)),
                        defn=list(range(5, 11))),
@@ -77,7 +83,7 @@ STAGES = [
     dict(enemy="drunk", reward=2),
     dict(enemy="bouncer", reward=3),
     dict(enemy="gambler", reward=3),
-    dict(enemy="elder", reward=4),
+    dict(enemy="slot machine", reward=4),
     dict(enemy="loan shark", reward=4),
     dict(enemy="the house", boss=True),
 ]
@@ -170,11 +176,13 @@ class Run:
                 self.bag.append(dict(kind=best, faces=list(DICE[best]["faces"])))
                 offers.remove(best)
                 continue
-            # rig: +2 on a random face of your best die, for good
-            if len(self.bag) >= 4 and self.can_buy_item("rig", offers, 2):
-                self.buy_item("rig", offers)
+            # rig: the biggest one offered, on a random face of your best die
+            rigs = [k for k in RIG if len(self.bag) >= 4 and self.can_buy_item(k, offers, 2)]
+            if rigs:
+                k = max(rigs, key=RIG.get)
+                self.buy_item(k, offers)
                 d = max(self.bag, key=lambda d: self.value(d["kind"], d))
-                d["faces"][self.rng.randrange(len(d["faces"]))] += 2
+                d["faces"][self.rng.randrange(len(d["faces"]))] += RIG[k]
                 continue
             plain = [d for d in self.bag if not d.get("ench")]
             if len(self.bag) >= P["ench"] and plain:
@@ -227,14 +235,16 @@ class Run:
         offers.remove(k)
 
     def offers(self, idx):
-        """src/logic/economy.p8.lua gen_offers: shop 1 (idx 0) 2 dice + 1
-        enchantment, shop 2 1 die + 2 items, then 1 die + 3 items. + dice from
-        idx 2, ++ from idx 3"""
+        """src/logic/economy.p8.lua gen_offers: dice first, one enchantment
+        last. shop 1 (idx 0) 2 dice + ench, shop 2 1 die + 1 item + ench, then
+        1 die + 2 items + ench. + dice and items from idx 2, ++ from idx 3"""
         top = 0 if idx < 2 else 1 if idx < 3 else 2
         dice = [k for k in DICE if k.count("+") <= top]
+        items = ITEM_TIERS[:(6, 8, 9)[top]]
         n_dice, n = (2, 3) if idx == 0 else (1, 3) if idx == 1 else (1, 4)
-        items = list(ENCH) if idx == 0 else list(ITEMS)
-        return [self.rng.choice(dice if i < n_dice else items) for i in range(n)]
+        return ([self.rng.choice(dice) for _ in range(n_dice)]
+                + [self.rng.choice(items) for _ in range(n - n_dice - 1)]
+                + [self.rng.choice(ENCH)])
 
 
 def sell_price(d):
