@@ -32,3 +32,6 @@ tests/snaps/
 
 # docs stay local
 docs
+# release builds (make export): big, kept locally
+exports/*
+!exports/README.md

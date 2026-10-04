@@ -6,7 +6,7 @@ CART    := cart.p8
 PROJECT_NAME ?= $(notdir $(CURDIR))
 AUTHOR       ?= $(shell git config user.name 2>/dev/null)
 
-.PHONY: build run test flat new spritedit
+.PHONY: build run test flat new spritedit export
 
 # build/game.lua (src/ and data/, comments stripped) and cart.p8's header +
 # include line. run it after pulling or editing src/ before opening cart.p8
@@ -60,9 +60,8 @@ endif
 		../$(NAME)/tests/snaps ../$(NAME)/tests/run.p8 ../$(NAME)/tests/.last_run.log
 	@echo "scaffolded ../$(NAME) -- cd ../$(NAME) && make run"
 
-# TODO: export target, once pico8 -export flag syntax/platforms are decided
-# (breadjam bundles html/ + per-platform .bin dirs by hand today -- this
-# should automate that). something like:
-#
-# export: build
-# 	$(PICO8) -export "html.zip $(CART)"
+# a release in exports/<date>_<time>_<commit>/ (see tools/export.py): web
+# player (index.html + index.js, and a zip for itch.io), the compressed
+# .p8.png and the comment-free .p8. open index.html to play it locally
+export: flat
+	python3 tools/export.py "$(PICO8)" "$(PROJECT_NAME)"
