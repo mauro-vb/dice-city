@@ -45,6 +45,7 @@ end
 
 shop = scene:extend({
 	init = function(_ENV)
+		global.want_music("menu")
 		global.parts = {}
 		offers = gen_offers()
 		reroll_cost = 1
