@@ -97,7 +97,7 @@ shop = scene:extend({
 			return s and (s.k == potion or s.k.col or s.k.up) and can_use(i)
 		end)
 		reroll_btn = f:item(button:new({
-			x = 104, y = 104, w = 44,
+			x = 95, y = 104, w = 64,
 			on_press = function()
 				if not run:spend(reroll_cost) then return end
 				-- [sfx 47: reroll shop]
@@ -120,7 +120,7 @@ shop = scene:extend({
 	end,
 
 	upd = function(_ENV)
-		reroll_btn.label = "reroll "..reroll_cost..cash
+		reroll_btn.label = "refresh shop "..reroll_cost..cash
 		for c in all(cards) do
 			if c.shows.faces then c.shows:upd() end
 		end

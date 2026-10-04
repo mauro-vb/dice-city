@@ -1,6 +1,8 @@
 -- not called "end": that's a lua keyword
 game_over = screen:extend({
 	init = function(_ENV)
+		-- [sfx 49: victory] beat the house
+		if run.won then sfx(49) end
 		make(_ENV, "title", function() scene:load(title) end, function() return timer > 30 end)
 	end,
 
