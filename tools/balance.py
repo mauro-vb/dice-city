@@ -36,22 +36,21 @@ from collections import Counter
 
 # --- copies of src/defs ----------------------------------------------------
 
-DICE = {  # src/defs/dice.p8.lua
-    "d3": dict(faces=[1, 2, 3], price=1),
-    "d6": dict(faces=[1, 2, 3, 4, 5, 6], price=4),
-    "gambler": dict(faces=[0, 0, 0, 6, 6, 6], price=3),
-    "d3+": dict(faces=[3, 4, 5], price=5),
-    "d8": dict(faces=[1, 2, 3, 4, 5, 6, 7, 8], price=6),
-    "d3++": dict(faces=[4, 5, 6], price=7),
-    # special dice: perk = the rule (see stats_of, play_fight)
-    "greedy": dict(faces=[1, 2, 3], price=3, perk="greedy"),
-    "grower": dict(faces=[1, 2, 3, 4, 5, 6], price=4, perk="grow"),
-    "clone": dict(faces=[0, 0], price=6, perk="clone"),
-    "wild": dict(faces=[1, 2, 3, 4, 5, 6], price=5, perk="wild"),
-}
+# src/defs/dice.p8.lua: d3 / d6 / d8, each with a + (every face +1) and a ++
+# (+2), 2 coins more per +
+DICE = {}
+for _name, _top, _price in (("d3", 3, 1), ("d6", 6, 4), ("d8", 8, 6)):
+    for _plus in range(3):
+        DICE[_name + "+" * _plus] = dict(faces=[f + 1 + _plus for f in range(_top)],
+                                         price=_price + 2 * _plus)
 # src/defs/shop_items.p8.lua. the bot never buys "double" (a copy of a placed
-# die for one fight, needs a free bag spot: rarely possible with 5 dice)
-ITEMS = {"potion": 3, "bomb": 4, "reroll": 3, "double": 4, "rig": 4}
+# die for one fight, needs a free bag spot: rarely possible with 5 dice).
+# enchantments (ENCH) go on a die (d["ench"], one per die): greedy = unused
+# pays 2x, grower = placed: lowest face +1 for good, wild = moved after the
+# roll, glass = rolls 2x and breaks 1 in 4 when the fight starts
+ITEMS = {"potion": 3, "bomb": 6, "reroll": 3, "double": 4, "rig": 4,
+         "greedy": 4, "grower": 4, "wild": 4, "glass": 3}
+ENCH = ("greedy", "grower", "wild", "glass")
 
 # src/defs/enemies.p8.lua -- a list is a stat that rolls one of its values
 ENEMIES = {
@@ -83,14 +82,15 @@ STAGES = [
 # when choosing between dice, upgrade = how much better a die must be to
 # replace the weakest, late = from which shop it stocks bombs (up to bombs) and
 # a reroll token, potions = how many it keeps, rerolls / keep = rerolls the
-# offers while the cost is at most rerolls and keep coins stay, grow / wild =
-# what those perks are worth in average
+# offers while the cost is at most rerolls and keep coins stay, grower / wild
+# = what those enchantments are worth in average, ench = from how many dice
+# it buys enchantments
 POLICY = dict(lam=0.25, upgrade=0.5, late=2, bombs=2, potions=2, rerolls=3, keep=1,
-              grow=0.7, wild=0.6)
+              grower=0.7, wild=0.6, ench=3)
 
 # src/entities/player.p8.lua, src/logic/economy.p8.lua
 MAX_HP, START_COINS, BASE = 20, 20, dict(atk=1, spd=1, defn=0)
-POTION_HEAL, BOMB_DMG, INV_SIZE, STACK_MAX = 5, 4, 3, 5
+POTION_HEAL, BOMB_DMG, INV_SIZE, STACK_MAX = 5, 10, 3, 5
 STATS = ("atk", "spd", "defn")
 BAG = 3  # placement destination index for "unused": its value becomes coins
 BAG_MAX = 5  # most dice you can own (src/logic/economy.p8.lua dice_max)
@@ -128,10 +128,11 @@ class Run:
 
     def shop(self, stage, idx=0):
         """buys like a good player (POLICY tunes it; see main --policy):
-        potions when hurt, then dice by value (value() below: a clone is
-        worth the best die it can stack on, a grower its future), upgrades
-        once the bag is full, rig on the best die, bombs and a reroll token
-        for the late bosses, and rerolls the offers while it can afford to."""
+        potions when hurt, then dice by value (value() below: an enchanted
+        die counts its enchantment), upgrades once the bag is full, rig on the
+        best die, enchantments (greedy on the weakest die, the rest on the
+        best die without one), bombs and a reroll token for the late bosses,
+        and rerolls the offers while it can afford to."""
         P = POLICY
         offers = self.offers(stage)
         reroll_cost = 1
@@ -164,6 +165,15 @@ class Run:
                 d = max(self.bag, key=lambda d: self.value(d["kind"], d))
                 d["faces"][self.rng.randrange(len(d["faces"]))] += 2
                 continue
+            plain = [d for d in self.bag if not d.get("ench")]
+            if len(self.bag) >= P["ench"] and plain:
+                ench = next((k for k in ENCH if self.can_buy_item(k, offers, 1)), None)
+                if ench:
+                    self.coins -= ITEMS[ench]
+                    offers.remove(ench)
+                    pick = min if ench == "greedy" else max
+                    pick(plain, key=lambda d: self.value(d["kind"], d))["ench"] = ench
+                    continue
             late = idx >= P["late"]
             if late and self.items["bomb"] < P["bombs"] and self.can_buy_item("bomb", offers, 1):
                 self.buy_item("bomb", offers)
@@ -185,14 +195,11 @@ class Run:
         """what a die is worth to this bag, in average stat"""
         f = d["faces"] if d else DICE[kind]["faces"]
         v = sum(f) / len(f)
-        pk = DICE[kind].get("perk")
-        if pk == "clone":
-            others = [x for x in self.bag if x is not d and perk(x) != "clone"]
-            v += max((avg(x) for x in others), default=0)
-        elif pk == "grow":
-            v += POLICY["grow"]
-        elif pk == "wild":
-            v += POLICY["wild"]
+        pk = d and d.get("ench")
+        if pk == "glass":
+            v *= 1.5  # double, minus the chance of losing it
+        elif pk in ("grower", "wild"):
+            v += POLICY[pk]
         return v
 
     def can_buy_item(self, k, offers, spare=0):
@@ -226,27 +233,24 @@ def kind_avg(kind):
 
 
 def perk(d):
-    return DICE[d["kind"]].get("perk")
+    return d.get("ench")
+
+
+def roll(rng, d):
+    """src/logic/roll.p8.lua roll_die: a glass die rolls double"""
+    return rng.choice(d["faces"]) * (2 if perk(d) == "glass" else 1)
 
 
 def stats_of(bag, place, values):
-    """values are the raw face rolls. dice resolve in the game's roll order
-    (src/entities/player.p8.lua roll_all): atk, spd, def columns then the bag;
-    the bot stacks a clone on top of its column (after the other dice there),
-    so it copies the die below it. a clone adds the die before it; an unused
-    greedy die pays 2x."""
+    """values are the rolls (glass already doubled); an unused greedy die
+    pays 2x."""
     s = dict(BASE)
-    coins, last = 0, 0
-    for dest in range(4):
-        idx = [i for i in range(len(bag)) if place[i] == dest]
-        idx.sort(key=lambda i: perk(bag[i]) == "clone")
-        for i in idx:
-            v = values[i] + (last if perk(bag[i]) == "clone" else 0)
-            last = v
-            if dest == BAG:
-                coins += v * (2 if perk(bag[i]) == "greedy" else 1)
-            else:
-                s[STATS[dest]] += v
+    coins = 0
+    for i, dest in enumerate(place):
+        if dest == BAG:
+            coins += values[i] * (2 if perk(bag[i]) == "greedy" else 1)
+        else:
+            s[STATS[dest]] += values[i]
     return s, coins
 
 
@@ -264,7 +268,7 @@ def score(run, enemy, place, samples):
 
 
 def sample_rolls(run, enemy, n):
-    return [([run.rng.choice(d["faces"]) for d in run.bag], roll_enemy(enemy, run.rng))
+    return [([roll(run.rng, d) for d in run.bag], roll_enemy(enemy, run.rng))
             for _ in range(n)]
 
 
@@ -338,7 +342,9 @@ def naive_place(run, style):
 def play_fight(run, enemy, style):
     """one fight with the items the policy allows; returns hp left (0 = lost)."""
     place = best_place(run, enemy) if style == "smart" else naive_place(run, style)
-    values = [run.rng.choice(d["faces"]) for d in run.bag]
+    values = [roll(run.rng, d) for d in run.bag]
+    # glass decides at the roll whether it breaks when the fight starts
+    run.broke = broke = [perk(d) == "glass" and run.rng.random() < 0.25 for d in run.bag]
     foe = roll_enemy(enemy, run.rng)
     e_hp = ENEMIES[enemy]["hp"]
     if style == "smart":
@@ -359,7 +365,7 @@ def play_fight(run, enemy, style):
             place = best[1]
     # growers placed in the fight: lowest face +1 (the last one of that value)
     for i, d in enumerate(run.bag):
-        if perk(d) == "grow" and place[i] != BAG:
+        if perk(d) == "grower" and place[i] != BAG:
             f = d["faces"]
             j = max(k for k in range(len(f)) if f[k] == min(f))
             f[j] += 1
@@ -383,7 +389,8 @@ def play_fight(run, enemy, style):
                 best_i, best_p = i, wins
         if best_i is not None:
             run.items["reroll"] -= 1
-            values[best_i] = run.rng.choice(run.bag[best_i]["faces"])
+            values[best_i] = roll(run.rng, run.bag[best_i])
+            broke[best_i] = perk(run.bag[best_i]) == "glass" and run.rng.random() < 0.25
             s, coins = stats_of(run.bag, place, values)
             left = fight(s, foe, run.hp, e_hp)
     # potions and bombs mid-fight, only when they turn the loss around
@@ -411,6 +418,7 @@ def play_run(seed, style):
     for i in range(1, len(STAGES)):
         st = STAGES[i]
         left, coins = play_fight(run, st["enemy"], style)
+        run.bag = [d for d, b in zip(run.bag, run.broke) if not b]
         log.append((run.hp, len(run.bag), run.last_stats))
         if not left:
             return i, log
@@ -429,8 +437,8 @@ def matchup_table(n_samples=400, seed=1):
     """each boss against the same mid-run bag, placed every way: how much does
     the best placement beat the naive ones? (the puzzle, isolated)"""
     rng = random.Random(seed)
-    bag = [dict(kind=k, faces=list(DICE[k]["faces"])) for k in ["d6", "d6", "d6", "d3+", "d8"]]
-    print("\nsame bag (3 d6, d3+, d8), full hp: win % per placement")
+    bag = [dict(kind=k, faces=list(DICE[k]["faces"])) for k in ["d6", "d6", "d6+", "d3++", "d8"]]
+    print("\nsame bag (2 d6, d6+, d3++, d8), full hp: win % per placement")
     print(f"{'boss':12} {'smart':>6} {'all atk':>8} {'even':>6}  smart placement (atk/spd/def/bag dice)")
     for name in ENEMIES:
         run = Run(rng)

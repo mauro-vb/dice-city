@@ -10,24 +10,29 @@ card = selectable:extend({
 			face_bars(k, x - (#k.faces * 3 - 1) / 2, 46, 3, 2)
 			k = k.kind
 		else
-			item_icon(k, x, 28)
+			item_icon(k, x, 28, 1)
 		end
 		txt(k.name, x, y0 + 30, can and 7 or dark, "c")
 		txt(k.price..cash, x, y0 + 36, run.coins >= k.price and 7 or 8, "c")
 	end,
 })
 
--- double: two overlapping dice; reroll token: a die outline with +1;
--- beer (potion): myspr region 17. bomb: no icon yet (sprite coming)
-function item_icon(k, x, y)
+-- item k's icon centred on x, y at scale s: 1 on a shop card, .5 in an
+-- inventory slot (src/ui/item_slot.p8.lua). double: two overlapping dice;
+-- reroll token: a die outline with +1; beer (potion): myspr
+-- region 17; an enchantment: a circle in its colour. bomb: no icon yet
+function item_icon(k, x, y, s)
 	if k == potion then
-		mspr(myspr[17], x, y)
+		local m = myspr[17]
+		sspr(m[1], m[2], m[3], m[4], x - m[5] * s, y - m[6] * s, m[3] * s, m[4] * s)
 	elseif k == double then
-		rrect(x - 7, y - 7, 11, 11, 2, 6)
-		rrect(x - 3, y - 3, 11, 11, 2, 7)
+		rrect(x - 7 * s, y - 7 * s, 11 * s, 11 * s, 2 * s, 6)
+		rrect(x - 3 * s, y - 3 * s, 11 * s, 11 * s, 2 * s, 7)
 	elseif k == token then
-		rrect(x - 8, y - 8, 16, 16, 3, 6)
+		rrect(x - 8 * s, y - 8 * s, 16 * s, 16 * s, 3 * s, 6)
 		print("+1", x - 3, y - 2, 7)
+	elseif k.col then
+		circfill(x, y, 6 * s, k.col)
 	end
 end
 

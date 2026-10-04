@@ -82,10 +82,12 @@ placement = scene:extend({
 		-- leave, so they can't be hovered any more
 		b = battle:new({p = run, foe = foe})
 		for d in all(run.bag) do
-			if d.slot and d.kind.perk == "grow" then grow(d) end
+			if d.slot and d.ench == grower then grow(d) end
 			run:unplace(d)
-			-- a double's copy counted for the stats; it doesn't stay
-			if d.temp then
+			-- a double's copy and a broken glass die counted for the stats;
+			-- they vanish in a puff
+			if d.temp or d.broke then
+				d:poof()
 				del(run.bag, d)
 				del(f.items, d)
 			end
@@ -151,7 +153,7 @@ placement = scene:extend({
 
 		for d in all(run.bag) do
 			-- a wild die can still move once you've seen the rolls
-			d.pickable = (phase == "place" or phase == "rolled" and d.kind.perk == "wild") and not aim
+			d.pickable = (phase == "place" or phase == "rolled" and d.ench == wild) and not aim
 			d.on_press = aim and pick
 		end
 		act_btn.label = phase == "place" and "roll" or phase == "done" and "next" or "fight"

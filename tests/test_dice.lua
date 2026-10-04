@@ -45,10 +45,22 @@ test("every fight stage has a named enemy, the last is the boss", function()
 	end
 end)
 
-test("grower: the lowest face grows, faces stay in order", function()
-	local g = die:new({kind = dgw})
+test("grower: the lowest face grows, faces stay in order, marked +1", function()
+	local g = die:new({kind = d3})
 	grow(g)
-	check(g.faces[1] == 2 and g.faces[2] == 2, "1 -> 2")
+	check(g.faces[1] == 2 and g.faces[2] == 2 and g.rigged[1] == 1, "1 -> 2")
 	grow(g)
-	check(g.faces[1] == 2 and g.faces[2] == 3 and g.faces[3] == 3, "then 2;3;3")
+	check(g.faces[1] == 2 and g.faces[2] == 3 and g.faces[3] == 3 and g.rigged[2] == 1, "then 2;3;3")
+end)
+
+test("plus dice: every face +1, ++ every face +2", function()
+	for i = 1, 3 do
+		check(d3p.faces[i] == d3.faces[i] + 1 and d3pp.faces[i] == d3.faces[i] + 2, "d3")
+	end
+	for i = 1, 6 do
+		check(d6p.faces[i] == d6.faces[i] + 1 and d6pp.faces[i] == d6.faces[i] + 2, "d6")
+	end
+	for i = 1, 8 do
+		check(d8p.faces[i] == d8.faces[i] + 1 and d8pp.faces[i] == d8.faces[i] + 2, "d8")
+	end
 end)

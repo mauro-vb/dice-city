@@ -12,7 +12,6 @@ focus = class:extend({
 		items = {}
 		cur = false
 		held = false
-		dragging = false
 		mouse_on = false
 		-- off-screen start: the first frame counts as a mouse move, so the
 		-- pointer shows right after a click that changed the scene

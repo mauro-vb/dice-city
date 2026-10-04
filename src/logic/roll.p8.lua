@@ -1,8 +1,12 @@
--- the only place dice randomness happens
+-- the only place dice randomness happens. glass rolls double, and decides
+-- here whether it breaks when the fight starts (1 in 4)
 function roll_die(d)
 	d.face_i = flr(rnd(#d.faces)) + 1
 	d.value = d.faces[d.face_i]
-	return d.value
+	if d.ench == glass then
+		d.value *= 2
+		d.broke = rnd(4) < 1
+	end
 end
 
 -- a fight's copy of enemy e with its rolling stats (lists, see

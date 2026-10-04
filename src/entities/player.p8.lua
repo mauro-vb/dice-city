@@ -40,22 +40,18 @@ player = game_object:extend({
 		return lo.."-"..hi
 	end,
 	-- the whole bag, in order: columns left to right (bottom die first), then
-	-- the bag; returns that order (the roll animation lands them in it).
-	-- a clone adds the roll of the die before it (the one below it, or the
-	-- last of the column before); the first die has nothing to copy
+	-- the bag; returns that order (the roll animation lands them in it)
 	roll_all = function(_ENV)
-		local order, last = {}, 0
+		local order = {}
 		for k in all(stat_names) do
 			for d in all(slots[k]) do
 				add(order, d)
+				roll_die(d)
 			end
 		end
 		for d in all(unused(_ENV)) do
 			add(order, d)
-		end
-		for d in all(order) do
-			last = roll_die(d) + (d.kind.perk == "clone" and last or 0)
-			d.value = last
+			roll_die(d)
 		end
 		return order
 	end,

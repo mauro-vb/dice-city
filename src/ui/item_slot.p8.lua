@@ -10,17 +10,8 @@ item_slot = selectable:extend({
 		local s = run.items[i]
 		shows, n = s and s.k or false, s and s.n or 0
 		rect(x - 5, y - 5, x + 4, y + 4, is_on(_ENV) and 6 or dark)
-		-- bomb: no icon yet (sprite coming). beer (potion): myspr region 17
-		-- shrunk to 7x9 to fit the slot
-		if shows == potion then
-			local s = myspr[17]
-			sspr(s[1], s[2], s[3], s[4], x - 4, y - 5, 7, 9)
-		elseif shows == double then
-			rect(x - 3, y - 3, x, y, 6)
-			rect(x - 1, y - 1, x + 2, y + 2, 7)
-		elseif shows == token then
-			rect(x - 2, y - 2, x + 1, y + 1, 6)
-		end
+		-- the shop's icon at half size (src/scenes/shop.p8.lua)
+		if shows then item_icon(shows, x, y, .5) end
 		if n > 1 then txt(n, x + 5, y + 1, 7, "r", true) end
 	end,
 })

@@ -47,7 +47,7 @@ ptween = function()
         return function()
             local iv = obj[k] or 0
             for i = 1, f do
-                obj[k] = lerp(iv, v, tr(i / f))
+                obj[k] = iv + (v - iv) * tr(i / f)
                 yield()
             end
         end

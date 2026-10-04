@@ -16,12 +16,13 @@ function tip_box(it, w, h, below, c)
 end
 
 function die_tip(it, d, below)
-	local k, n = d.kind, #d.faces
-	local info = k.info or "avg "..d:avg_str()
+	local k, n, e = d.kind, #d.faces, d.ench
+	local info = e and e.info or "avg "..d:avg_str()
 	-- squares (d6) and circles (d8) 10 px apart; triangles (d3) 13 px apart
 	local tri = n == 3
 	local x, y = tip_box(it, max(n * (tri and 13 or 10) + 5, max(#info, #k.name) * 4 + 6), 40, below)
-	print(k.name, x + 3, y + 3, 7)
+	-- an enchanted die: its enchantment's name after the die's
+	print(k.name.." "..(e and e.name or ""), x + 3, y + 3, 7)
 	for i = 1, n do
 		local fx, c = x + (tri and 4 or 3) + (i - 1) * (tri and 13 or 10), d.value and i == d.face_i and 7 or 6
 		if tri then

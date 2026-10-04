@@ -55,18 +55,18 @@ test("potion mid-fight heals the battle, not the run", function()
 	check(use_item(1, b) == potion and b.p_hp == 15 and run.hp == 10)
 end)
 
-test("bomb: 4 damage ignoring def, only in a fight", function()
+test("bomb: 10 damage ignoring def, only in a fight", function()
 	fresh()
 	buy(bomb)
 	check(not use_item(1), "no fight: can't use")
-	local b = battle:new({p = run, foe = {hp = 6, atk = 1, spd = 1, def = 9}})
+	local b = battle:new({p = run, foe = {hp = 12, atk = 1, spd = 1, def = 9}})
 	check(use_item(1, b) == bomb and b.e_hp == 2 and #run.items == 0)
 end)
 
 test("a bomb can finish the fight", function()
 	fresh()
 	buy(bomb)
-	local b = battle:new({p = run, foe = {hp = 3, atk = 1, spd = 1, def = 0}})
+	local b = battle:new({p = run, foe = {hp = 9, atk = 1, spd = 1, def = 0}})
 	use_item(1, b)
 	check(b:over() and b:won())
 end)
@@ -102,8 +102,8 @@ end)
 
 test("greedy: unused it pays double its roll", function()
 	fresh()
-	local g, d = run:add_die(dgr), run:add_die(d3)
-	g.value, d.value = 3, 3
+	local g, d = run:add_die(d3), run:add_die(d3)
+	g.ench, g.value, d.value = greedy, 3, 3
 	check(leftover_coins(run:unused()) == 9)
 end)
 
@@ -131,10 +131,10 @@ end)
 test("selling: half the price rounded down, die leaves the bag", function()
 	fresh()
 	run.coins = 0
-	local d = run:add_die(d6g)
-	check(sell_price(d) == flr(d6g.price / 2))
+	local d = run:add_die(d6p)
+	check(sell_price(d) == flr(d6p.price / 2))
 	sell(d)
-	check(#run.bag == 0 and run.coins == flr(d6g.price / 2))
+	check(#run.bag == 0 and run.coins == flr(d6p.price / 2))
 end)
 
 test("at most dice_max dice", function()
@@ -166,8 +166,8 @@ end)
 test("d8 rolls 1-8 and prints its value", function()
 	local d = die:new({kind = d8})
 	for _ = 1, 30 do
-		local v = roll_die(d)
-		check(v >= 1 and v <= 8)
+		roll_die(d)
+		check(d.value >= 1 and d.value <= 8)
 	end
 	check(d.w == 16)
 end)
@@ -184,6 +184,33 @@ test("double: a temporary copy in the same column, if it fits", function()
 	check(use_item(1, false, d) == double and #run.slots.atk == 2)
 	local c = run.slots.atk[2]
 	check(c.temp and c.value == d.value and c.kind == d6 and c.faces != d.faces, "same value, own faces")
+	check(not c.ench, "never enchanted")
 	run:place(run:add_die(d3), "atk")
 	check(not use_item(1, false, d), "column full")
+end)
+
+test("enchant: becomes the die's ench, a new one replaces it", function()
+	fresh()
+	run.coins = 99
+	buy(greedy)
+	buy(wild)
+	local d = run:add_die(d6)
+	check(use_item(1, false, d) == greedy and d.ench == greedy)
+	check(use_item(1, false, d) == wild and d.ench == wild, "replaced")
+	check(#run.items == 0, "both used")
+end)
+
+test("rig marks its face +2", function()
+	fresh()
+	run.items = {{k = rig, n = 1}}
+	local d = run:add_die(d6)
+	use_item(1, false, d)
+	local n = 0
+	for i = 1, 6 do
+		if d.rigged[i] then
+			n += 1
+			check(d.rigged[i] == 2 and d.faces[i] == i + 2)
+		end
+	end
+	check(n == 1)
 end)

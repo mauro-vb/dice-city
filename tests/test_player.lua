@@ -45,18 +45,24 @@ test("new players don't share dice", function()
 	check(#a.bag == 5 and #b.bag == 4)
 end)
 
-test("clone: copies the die rolled before it, columns then bag", function()
+test("roll_all: every die, columns left to right, then the bag", function()
 	local p = player:new()
-	local c0, a, c1, c2 = p:add_die(dcl), p:add_die(d8), p:add_die(dcl), p:add_die(dcl)
-	p:place(c0, "atk")
-	p:place(a, "spd")
-	p:place(c1, "spd")
+	local a, b, c = p:add_die(d3), p:add_die(d8), p:add_die(d6)
+	p:place(b, "atk")
+	p:place(c, "spd")
 	local order = p:roll_all()
-	check(order[1] == c0 and order[4] == c2, "atk, spd, then the bag")
-	check(c0.value == 0, "first: nothing to copy")
-	check(c1.value == a.value and c2.value == a.value, "the die below, then the last rolled")
-	check(p:get_stat("spd") == 1 + 2 * a.value)
-	c1.faces[1], c1.faces[2] = 2, 2
-	p:roll_all()
-	check(c1.value == a.value + 2, "a rigged clone adds its face")
+	check(order[1] == b and order[2] == c and order[3] == a, "atk, spd, then the bag")
+	check(a.value and b.value and c.value, "all rolled")
+	check(p:get_stat("atk") == 1 + b.value)
+end)
+
+test("glass: rolls double its face, breaks about 1 in 4", function()
+	local d, broke = die:new({kind = d6}), 0
+	d.ench = glass
+	for _ = 1, 400 do
+		roll_die(d)
+		check(d.value == d.faces[d.face_i] * 2)
+		if d.broke then broke += 1 end
+	end
+	check(broke > 60 and broke < 140, "about 100 of 400")
 end)

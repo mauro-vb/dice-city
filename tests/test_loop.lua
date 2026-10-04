@@ -241,3 +241,20 @@ test("double: press it, then a placed die; the copy is gone when the fight start
 	click(placement.act_btn)
 	check(#run.bag == 1 and placement.b.stats.atk == 1 + d.value * 2, "copy counted, then removed")
 end)
+
+test("glass: enchant a placed die, it breaks when the fight starts", function()
+	start_run()
+	leave_shop(true)
+	run.items = {{k = glass, n = 1}}
+	local d = run.bag[1]
+	drag(d, placement.cols.atk)
+	click(placement.inv[1])
+	click(d)
+	check(d.ench == glass and #run.items == 0, "enchanted")
+	click(placement.act_btn)
+	skip()
+	d.broke = true
+	click(placement.act_btn)
+	check(#run.bag == 0 and placement.b.stats.atk == 1 + d.value, "counted, then broke")
+	check(d.value == d.faces[d.face_i] * 2, "doubled")
+end)

@@ -8,14 +8,14 @@ pips_sq = split("5,19,159,1379,13579,134679", ",", false)
 pips_tri = split("5,28,279", ",", false)
 
 -- black pips centred on x, y, s apart; 0 is a sad face, values without a
--- layout print. num: always print the value (d8). rg: a rigged face (+2), the
--- pips not in the layout for 2 less are red (a printed value turns red with a
--- black outline)
+-- layout print. num: always print the value (d8). rg: how much a rig (2) or
+-- a grower (1) added to the face; the pips not in the layout for rg less are
+-- red (a printed value turns red with a black outline)
 function draw_pips(x, y, v, s, tri, num, rg)
 	if tri then y += s / 2 end
 	local set = v == 0 and "1379" or not num and (tri and pips_tri or pips_sq)[v]
 	if not set then return txt(v, x, y - 2, rg and 8 or 0, "c", rg) end
-	local old = rg and (tri and pips_tri or pips_sq)[v - 2] or ""
+	local old = rg and (tri and pips_tri or pips_sq)[v - rg] or ""
 	-- triangle dots sit closer together so the outer ones clear the edges
 	local r, sp = s \ 4, tri and s - s \ 4 or s
 	-- 0 is a sad face: eyes and mouth corners are pips 1 3 7 9, plus a bar
@@ -56,24 +56,20 @@ die = selectable:extend({
 	h = 16,
 	-- false, not nil: a missing field falls through to globals (e.g. the slot class)
 	slot = false,
-	value = false,
 	face_i = 1,
-	tx = false,
-	ty = false,
-	moving = false,
+	-- left nil (no global has these names): value, tx, ty, moving, ench (the
+	-- enchantment), temp (a double's copy: drawn inverted, gone when the
+	-- fight starts), broke (glass that breaks when the fight starts), and
+	-- air_t / ft, which roll_anim sets before they're read
 	hop = 0,
-	-- a double's copy: drawn inverted, gone when the fight starts
-	temp = false,
 	idle_t = 0,
 	-- roll animation (visual only, the value is already rolled): air = frames
 	-- left in the air of air_t; jump = height offset; flick = the face shown in
 	-- the air, ft = frames to the next one; sq = squash (> 0) or stretch (< 0)
 	-- in px; land = frames since the final landing
 	air = 0,
-	air_t = 1,
 	jump = 0,
 	flick = 0,
-	ft = 0,
 	sq = 0,
 	land = 9,
 	init = function(_ENV)
@@ -125,17 +121,21 @@ die = selectable:extend({
 		if air > 0 then return end
 		local lo, hi = range(_ENV)
 		land, jump, global.shake = 0, 0, 4
-		spray(_ENV, 5, split"5,6", 1.5, .02)
+		poof(_ENV)
 		if value == hi then spray(_ENV, 8, split"10,9,7", 2.5, .1) end
-		-- flash: a white circle a bit bigger than the die, then one in the
-		-- face's colour (dark grey lowest, yellow highest, white otherwise)
-		circlep({x = x, y = y, size = 20, c = 7, maxage = 2})
+		-- then a flash in the face's colour (dark grey lowest, yellow highest,
+		-- white otherwise)
 		circlep({x = x, y = y, size = 18, c = value == lo and dark or value == hi and 10 or 7, wait = 3, maxage = 4})
+	end,
+	-- dust and a white flash a bit bigger than the die
+	poof = function(_ENV)
+		spray(_ENV, 5, split"5,6", 1.5, .02)
+		circlep({x = x, y = y, size = 20, c = 7, maxage = 2})
 	end,
 	-- glide to a spot with a tween; a new target waits for the running tween
 	move_to = function(_ENV, nx, ny)
 		tx, ty = nx, ny
-		if moving or (x == tx and y == ty) then return end
+		if moving or x == tx and y == ty then return end
 		moving = true
 		tween.new(_ENV):add({
 			parallel = true,
@@ -162,7 +162,7 @@ die = selectable:extend({
 		-- squash / stretch keeps the bottom edge on the ground: big squash for 3
 		-- frames after the final landing, then a small one for 2
 		local s = air > 0 and sq or land < 4 and 2 or land < 6 and 1 or 0
-		local tri, body, edge = #faces == 3, value and not kind.perk and 7 or kind.col, dark
+		local tri, body, edge = #faces == 3, ench and ench.col or value and 7 or 6, dark
 		local yy, w, h = y + hop + jump, w + s, 16 - s
 		local l, top, bot = x - w \ 2, yy + 8 - h, yy + 7
 		if temp then

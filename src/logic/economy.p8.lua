@@ -12,7 +12,7 @@ end
 
 -- what an unused die pays on a win: its roll, double for a greedy die
 function coin_value(d)
-	return (d.value or 0) * (d.kind.perk == "greedy" and 2 or 1)
+	return (d.value or 0) * (d.ench == greedy and 2 or 1)
 end
 
 -- unused dice were rolled with the rest: their values become coins
@@ -47,10 +47,11 @@ end
 
 -- inventory: inv_size slots, each a stack {k = item, n = count} of one kind
 -- (up to stack_max). b = the battle when used mid-fight, else false.
--- potion: heals 5 when hurt (the fight's hp in a fight). bomb: 4 damage to
+-- potion: heals 5 when hurt (the fight's hp in a fight). bomb: 10 damage to
 -- the enemy, ignoring def, only in a fight. token: rerolls die d (scenes
 -- decide when: after rolling). double: a temporary copy of placed die d.
--- rig: +2 to a random face of die d, for good (marked in d.rigged)
+-- rig: +2 to a random face of die d, for good (d.rigged = 2 on that face).
+-- an enchantment (has a col) becomes d.ench, replacing the old one
 inv_size, stack_max = 3, 5
 
 function stack_for(k)
@@ -75,7 +76,7 @@ function use_item(i, b, d)
 	s.n -= 1
 	if s.n == 0 then deli(run.items, i) end
 	if s.k == bomb then
-		b:blast(4)
+		b:blast(10)
 	elseif s.k == token then
 		roll_die(d)
 	elseif s.k == double then
@@ -86,7 +87,9 @@ function use_item(i, b, d)
 	elseif s.k == rig then
 		local f = flr(rnd(#d.faces)) + 1
 		d.faces[f] += 2
-		d.rigged[f] = true
+		d.rigged[f] = 2
+	elseif s.k.col then
+		d.ench = s.k
 	elseif b then
 		b:heal(5)
 	else
