@@ -49,6 +49,7 @@ placement = scene:extend({
 				for i = 1, #order do
 					order[i]:roll_anim(i - 1)
 				end
+				-- [sfx 32 / 43 / 44 / 41: dice roll]
 				-- one roll sound per die (up to 3) on channels 3, 2, 1 at once (the
 				-- 2nd and 3rd briefly take over music channels), each from a
 				-- different note so they don't sound as one. an sfx plays on one
@@ -72,6 +73,7 @@ placement = scene:extend({
 			if k == double then f:item(run.bag[#run.bag]) end
 			if k == token then
 				d:roll_anim(0)
+				-- [sfx 32: dice roll] a reroll item
 				sfx(32, 3)
 			end
 			aim = false
@@ -87,7 +89,8 @@ placement = scene:extend({
 	-- the battle runs live once the intro tween ends
 	start_fight = function(_ENV)
 		phase, aim = "intro", false
-		sfx(36) -- the enemy comes in
+		-- [sfx 36: enemy appearance] the fight intro starts
+		sfx(36)
 		-- the battle takes the stats and bag coins now; then every die goes back
 		-- to the bag (placement only matters before the fight) and the columns
 		-- leave, so they can't be hovered any more
@@ -139,6 +142,7 @@ placement = scene:extend({
 		end
 		local k = use_item(i, phase == "fight" and b)
 		if k == bomb then
+			-- [sfx 39: bomb]
 			sfx(39)
 			return hurt_bar(_ENV, "e", b.e_hp)
 		end
@@ -201,7 +205,8 @@ placement = scene:extend({
 	end_fight = function(_ENV)
 		phase = "done"
 		gain, next_scene = finish_fight(b)
-		if not b:won() then sfx(37) end -- defeat
+		-- [sfx 37: defeat] the fight is lost
+		if not b:won() then sfx(37) end
 		-- freeze the charge bars: fresh tables, so the running charge tweens
 		-- keep writing into the old ones
 		bars.p_charge, bars.e_charge = {v = bars.p_charge.v}, {v = bars.e_charge.v}
@@ -213,7 +218,8 @@ placement = scene:extend({
 	-- one event: snap the hp number, flash, let the trail follow, recharge
 	hit = function(_ENV, ev)
 		local target = ev.who == "p" and "e" or "p"
-		sfx(40) -- punch
+		-- [sfx 40: punch] every hit, either side (40 has no notes yet)
+		sfx(40)
 		-- hit-stop: the next tick waits longer the harder the hit
 		frames = -2 - ev.dmg \ 3
 		if target == "e" then

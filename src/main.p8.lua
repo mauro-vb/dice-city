@@ -5,8 +5,8 @@ t = 0
 
 function _init()
     color_settings()
-    -- the song (patterns 0-5: intro 0-2, then 3-5 loop) on channels 0-2;
-    -- channel 3 is always free for sound effects
+    -- [music] the song from sound/music.p8 (patterns 0-5: intro 0-2, then
+    -- 3-5 loop), on channels 0-2; channel 3 is always free for sound effects
     music(0)
     scene:load(title)
 end

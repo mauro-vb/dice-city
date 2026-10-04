@@ -14,7 +14,8 @@
 scene = game_object:extend({
     -- switch to new scene (no scene ever loads itself)
     load = function(_ENV, new_scene)
-        sfx(33) -- next
+        -- [sfx 33: next] every scene change
+        sfx(33)
         current = new_scene
         current:init()
     end
