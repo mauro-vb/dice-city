@@ -100,6 +100,8 @@ shop = scene:extend({
 			x = 104, y = 104, w = 44,
 			on_press = function()
 				if not run:spend(reroll_cost) then return end
+				-- [sfx 47: reroll shop]
+				sfx(47)
 				offers = gen_offers()
 				build(_ENV)
 			end,

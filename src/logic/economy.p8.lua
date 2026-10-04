@@ -101,11 +101,17 @@ function use_item(i, b, d)
 		d.faces[f] += s.k.up
 		d.rigged[f] = s.k.up
 	elseif s.k.col then
+		-- [sfx 48: enchant]
+		sfx(48)
 		d.ench = s.k
-	elseif b then
-		b:heal(10)
 	else
-		run.hp = min(run.max_hp, run.hp + 10)
+		-- [sfx 46: heal] a beer
+		sfx(46)
+		if b then
+			b:heal(10)
+		else
+			run.hp = min(run.max_hp, run.hp + 10)
+		end
 	end
 	return s.k
 end

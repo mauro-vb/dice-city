@@ -64,7 +64,7 @@ placement = scene:extend({
 				-- different note so they don't sound as one. an sfx plays on one
 				-- channel at a time, so 43 and 44 are copies of 32 (cart.p8 only)
 				for i = 1, min(#order, 3) do
-					sfx(i < 2 and 32 or 41 + i, 4 - i, i * 3 - 3)
+					sfx(split"32,43,44"[i], 4 - i, i * 3 - 3)
 				end
 				-- last landing at 30 + 10n, totals 10 frames later
 				roll_t, roll_end = 0, 40 + 10 * #order
@@ -95,8 +95,8 @@ placement = scene:extend({
 	-- the battle runs live once the intro tween ends
 	start_fight = function(_ENV)
 		phase = "intro"
-		-- [sfx 36: enemy appearance] the fight intro starts
-		sfx(36)
+		-- [sfx 42: fight!] the fight button is pressed, the intro starts
+		sfx(42)
 		-- the battle takes the stats and bag coins now; then every die goes back
 		-- to the bag (placement only matters before the fight) and the columns
 		-- leave, so they can't be hovered any more
@@ -104,9 +104,8 @@ placement = scene:extend({
 		for d in all(run.bag) do
 			if d.slot and d.ench == grower then grow(d) end
 			run:unplace(d)
-			-- a double's copy and a broken glass die counted for the stats;
-			-- they vanish in a puff
-			if d.temp or d.broke then
+			-- a double's copy counted for the stats; it vanishes in a puff
+			if d.temp then
 				d:poof()
 				del(run.bag, d)
 				del(f.items, d)
@@ -250,6 +249,8 @@ placement = scene:extend({
 		else
 			-- the enemy lunges at you: quick step down, ease back. a fresh
 			-- table each hit, so two lunges never tween the same field
+			-- [sfx 41: damage to player]
+			sfx(41)
 			lunge = {y = 0}
 			tw(lunge, {{f = 3, e = qin, y = 8}, {f = 8, e = qout, y = 0}})
 		end

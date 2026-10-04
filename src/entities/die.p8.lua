@@ -59,7 +59,7 @@ die = selectable:extend({
 	face_i = 1,
 	-- left nil (no global has these names): value, tx, ty, moving, ench (the
 	-- enchantment), temp (a double's copy: drawn inverted, gone when the
-	-- fight starts), broke (glass that breaks when the fight starts), and
+	-- fight starts), broke (glass that shatters and leaves on landing), and
 	-- air_t / ft, which roll_anim sets before they're read
 	hop = 0,
 	idle_t = 0,
@@ -116,6 +116,13 @@ die = selectable:extend({
 		-- squash touching the ground between hops, stretch while fast
 		sq = f < .15 and p > .2 and 1 or (f < .3 or f > .8) and -1 or 0
 		if air > 0 then return end
+		-- [sfx 45: glass shatter] a glass die that broke is gone as it lands,
+		-- its roll with it
+		if broke then
+			sfx(45)
+			run:unplace(_ENV)
+			del(run.bag, _ENV)
+		end
 		local lo, hi = range(_ENV)
 		land, jump, global.shake = 0, 0, 4
 		poof(_ENV)
