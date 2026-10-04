@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Regenerates the __lua__ section of cart.p8 from src/ and data/.
+"""Builds the game from src/ and data/ into build/game.lua (comments
+stripped, in load order) and points cart.p8's __lua__ section at it.
 
-Only the #include list between the __lua__ marker and the next section
-marker is touched -- __gfx__/__label__/__map__/__sfx__/__music__ are left
+Only the __lua__ section (header + one #include line) is touched -- __gfx__/__label__/__map__/__sfx__/__music__ are left
 byte-for-byte untouched, since those are owned by PICO-8's own sprite/map/
 sfx editors and saved back into cart.p8 directly by PICO-8 itself.
 
@@ -38,6 +38,7 @@ CATEGORIES = ["oop", "ui", "utils", "particles", "entities", "scenes"]
 TESTS = ROOT / "tests"
 TEST_CART = TESTS / "run.p8"
 BUILD = ROOT / "build"
+GAME = BUILD / "game.lua"
 # a string (kept as-is) or a comment (dropped) -- strings first, so "--"
 # inside a string is never mistaken for a comment
 STRING_OR_COMMENT = re.compile(
@@ -87,19 +88,13 @@ def write_test_carts(includes):
     don't fit in one cart. Each test("...") block gets its own
     tests/run_<file>_<n>.p8 (plus a .lua with the file's shared helpers and
     that one test). They live in tests/ so the harness's ../cart.p8 still
-    resolves. The game goes in as one comment-free file, tests/run_game.lua:
-    PICO-8 caps a cart's code at 65535 characters, comments included, and the
-    commented game plus harness and test no longer fits (error line numbers
-    then point into run_game.lua).
+    resolves. The game goes in as build/game.lua (comment-free, see
+    write_game), like in cart.p8.
     """
     for old in TESTS.glob("run_*"):
         old.unlink()
     TEST_CART.unlink(missing_ok=True)
-    code = []
-    for inc in includes:
-        code += strip_comments((ROOT / inc.removeprefix("#include ")).read_text())
-    (TESTS / "run_game.lua").write_text("\n".join(code) + "\n")
-    game = ["#include run_game.lua"]
+    game = ["#include ../build/game.lua"]
     count = 0
     for path in sorted(TESTS.glob("test_*.lua")):
         head, chunks = split_tests(path.read_text())
@@ -112,6 +107,19 @@ def write_test_carts(includes):
             (TESTS / f"{stem}.p8").write_text("\n".join(lines))
             count += 1
     print(f"wrote {count} test carts to tests/run_*.p8")
+
+
+def write_game(includes):
+    """build/game.lua: the whole game in load order, comments dropped, one
+    "-- <path>" line before each file (to find where an error line came
+    from). cart.p8 includes only this file: PICO-8 caps a cart's code at
+    65535 characters, comments included, and src/ is well commented."""
+    code = []
+    for inc in includes:
+        path = inc.removeprefix("#include ")
+        code += [f"-- {path}"] + strip_comments((ROOT / path).read_text())
+    BUILD.mkdir(exist_ok=True)
+    GAME.write_text("\n".join(code) + "\n")
 
 
 def strip_comments(src):
@@ -171,10 +179,11 @@ def main():
 
     header = build_header(args.name, args.author)
     includes = collect_includes()
-    new_lines = lines[: lua_i + 1] + header + includes + [""] + lines[end_i:]
+    write_game(includes)
+    new_lines = lines[: lua_i + 1] + header + [f"#include {GAME.relative_to(ROOT).as_posix()}", ""] + lines[end_i:]
 
     CART.write_text("\n".join(new_lines) + "\n")
-    print(f"wrote {len(includes)} includes to {CART.name}"
+    print(f"wrote {GAME.relative_to(ROOT)} ({len(includes)} files) and {CART.name}"
           + (f" (title: {args.name!r}, author: {args.author!r})" if header else ""))
 
     if args.test:

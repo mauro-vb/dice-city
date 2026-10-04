@@ -8,7 +8,8 @@ AUTHOR       ?= $(shell git config user.name 2>/dev/null)
 
 .PHONY: build run test flat new spritedit
 
-# regenerate cart.p8's #include list (and title/author header) from src/ and data/
+# build/game.lua (src/ and data/, comments stripped) and cart.p8's header +
+# include line. run it after pulling or editing src/ before opening cart.p8
 build:
 	python3 build.py --name "$(PROJECT_NAME)" --author "$(AUTHOR)"
 
