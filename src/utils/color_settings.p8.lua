@@ -4,16 +4,12 @@ bg = 0
 dark = 5
 
 -- palette setup hook -- call once from _init()
--- to remap a color everywhere add pal(old, new, 1), e.g. pal(8, 14, 1) turns
--- red into pink (the empty cmap loop that did this is in git)
+-- to remap a colour everywhere, change the first number of its row in fades
+-- (src/oop/scene) and the steps after it: _draw sets the screen palette from
+-- there every frame, so pal(old, new, 1) here would be overwritten. slot 1
+-- shows extended colour 129 (navy); any slot can take 128-143 this way
 function color_settings()
     palt(0, false)  -- color 0 (black) is opaque
     palt(11, true)   -- color 11 becomes the transparent color instead
-    pal(1, 129, 1)
-    --pal(8, 131, 1)
-    --pal(2, 33, 1)
-
     poke(0x5f2e, 1) -- persist the palette across screen updates
-    -- screen palette: slot 0 (black: background, pips, outlines) shows as
-    -- extended colour 129 (navy). any slot can take 128-143 this way
 end
