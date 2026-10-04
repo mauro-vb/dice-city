@@ -10,6 +10,7 @@ test("charge bars keep filling after the first hit", function()
 	-- the scene switches in after the fade out (15 frames)
 	scene:load(placement)
 	step(15)
+	placement.story = false
 	placement.phase = "rolled"
 	-- press fight like a player: start_fight must run inside the frame
 	local b = placement.act_btn
