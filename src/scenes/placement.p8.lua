@@ -253,9 +253,9 @@ placement = scene:extend({
 		-- hit-stop: the next tick waits longer the harder the hit
 		frames = -2 - ev.dmg \ 3
 		if target == "e" then
-			-- one more spark per 4 damage (3 at most: god mode hits for 9999),
+			-- one more spark per 4 damage (5 at most: god mode hits for 9999),
 			-- bigger with damage
-			sparks(_ENV, 1 + min(ev.dmg \ 4, 2), min(4 + ev.dmg, 12))
+			sparks(_ENV, 1 + min(ev.dmg \ 4, 4), min(4 + ev.dmg, 12))
 		else
 			-- the enemy lunges at you: quick step down, ease back. a fresh
 			-- table each hit, so two lunges never tween the same field
