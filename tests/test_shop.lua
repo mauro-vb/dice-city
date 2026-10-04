@@ -4,10 +4,19 @@ local function fresh()
 	run.items = {}
 end
 
+-- dice tier: 0 plain, 1 = +, 2 = ++ (by name)
+function dice_tier(k)
+	local n = 0
+	for i = 1, #k.name do
+		if sub(k.name, i, i) == "+" then n += 1 end
+	end
+	return n
+end
+
 test("buying a die adds it and returns it", function()
 	fresh()
 	local d = buy(d6)
-	check(d and d.kind == d6 and #run.bag == 1 and run.coins == 20 - d6.price)
+	check(d and d.kind == d6 and #run.bag == 1 and run.coins == 10 - d6.price)
 end)
 
 test("can't buy without the coins", function()
@@ -32,7 +41,7 @@ test("same items stack in one slot, up to stack_max", function()
 	end
 	check(run.items[3].n == stack_max and not can_buy(bomb), "bomb stack full, no free slot")
 	check(can_buy(potion), "second potion stack still has room")
-	check(run.hp == 20, "buying doesn't heal")
+	check(run.hp == run.max_hp, "buying doesn't heal")
 end)
 
 test("potion: heals 5 when hurt, one from the stack", function()
@@ -40,8 +49,8 @@ test("potion: heals 5 when hurt, one from the stack", function()
 	buy(potion)
 	buy(potion)
 	check(not use_item(1), "full hp: can't use")
-	run.hp = 18
-	check(use_item(1) == potion and run.hp == 20 and run.items[1].n == 1, "capped at max hp")
+	run.hp = run.max_hp - 2
+	check(use_item(1) == potion and run.hp == run.max_hp and run.items[1].n == 1, "capped at max hp")
 	run.hp = 10
 	use_item(1)
 	check(run.hp == 15 and #run.items == 0, "last one frees the slot")
@@ -89,16 +98,7 @@ test("bag dice count as coins only after rolling", function()
 	check(leftover_coins(run:unused()) == 4)
 end)
 
--- dice tier: 0 plain, 1 = +, 2 = ++ (by name)
-function dice_tier(k)
-	local n = 0
-	for i = 1, #k.name do
-		if sub(k.name, i, i) == "+" then n += 1 end
-	end
-	return n
-end
-
-test("shop 1: 2 plain dice + 1 enchantment; shop 2: 1 die + 2 items", function()
+test("shop 1: 2 plain dice + 1 enchantment; shop 2: 1 die + 1 item + 1 enchantment", function()
 	new_run(3)
 	for i = 1, 20 do
 		local o = gen_offers()
@@ -108,12 +108,12 @@ test("shop 1: 2 plain dice + 1 enchantment; shop 2: 1 die + 2 items", function()
 	run.stage_i = 1
 	for i = 1, 20 do
 		local o = gen_offers()
-		check(#o == 3 and o[1].faces and not o[2].faces and not o[3].faces, "1 + 2")
+		check(#o == 3 and o[1].faces and not o[2].faces and not o[2].col and o[3].col, "1 + 1 + ench")
 		check(dice_tier(o[1]) == 0, "plain die only")
 	end
 end)
 
-test("from shop 3: 1 die + 3 items; + dice from stage 2, ++ from 3", function()
+test("from shop 3: 1 die + 2 items + 1 enchantment; + dice from stage 2, ++ from 3", function()
 	new_run(3)
 	local top = {}
 	for s = 2, 5 do
@@ -121,7 +121,7 @@ test("from shop 3: 1 die + 3 items; + dice from stage 2, ++ from 3", function()
 		top[s] = 0
 		for i = 1, 60 do
 			local o = gen_offers()
-			check(#o == 4 and o[1].faces and not o[2].faces and not o[4].faces, "1 + 3")
+			check(#o == 4 and o[1].faces and not o[2].faces and not o[3].col and o[4].col, "1 + 2 + ench")
 			top[s] = max(top[s], dice_tier(o[1]))
 		end
 	end

@@ -2,15 +2,10 @@ stat_names = split"atk,spd,def"
 
 player = game_object:extend({
 	init = function(_ENV)
-		hp = 20
-		max_hp = 20
-		coins = 20
-		stage_i = 0
-		won = false
+		-- starting hp and coins (tools/balance.py MAX_HP, START_COINS)
+		hp, max_hp, coins, stage_i, won, bag, items = 40, 40, 10, 0, false, {}, {}
 		base = {atk = 1, spd = 1, def = 0}
 		slots = {atk = {}, spd = {}, def = {}}
-		bag = {}
-		items = {}
 	end,
 	place = function(_ENV, d, s)
 		unplace(_ENV, d)

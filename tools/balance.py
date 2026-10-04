@@ -15,11 +15,12 @@ tests/test_combat.lua): stats are fixed once the dice are rolled, so a fight is
 deterministic and has a closed form instead of a tick loop:
   - a side with speed s fills its bar by s + 5 a tick and hits at 100, so its
     k-th hit lands on tick ceil(100 * k / (s + 5))
-  - a hit does max(1, atk - other side's def)
+  - a hit does max(0, atk - other side's def)
   - the player needs n = ceil(enemy hp / dmg) hits, landing on tick t
   - the enemy gets floor((t - 1) * rate / 100) hits in before that (the
     player hits first within a tick, so a hit on tick t itself never lands)
-  - over at tick 1000 (a loss)
+  - over at tick 1000 (a loss); if nobody can do damage, a loss after 30
+    ticks (only bombs could win it)
 
 The scripted players:
   smart  - searches dice placements for the best win chance (then hp kept,
@@ -79,12 +80,12 @@ ENEMIES = {
 # 1 + 3 (a coin flip), every kind equally likely
 STAGES = [
     dict(reward=0),  # 0: the opening shop, no fight
-    dict(enemy="tourist", reward=2),
-    dict(enemy="drunk", reward=2),
-    dict(enemy="bouncer", reward=3),
-    dict(enemy="gambler", reward=3),
-    dict(enemy="slot machine", reward=4),
-    dict(enemy="loan shark", reward=4),
+    dict(enemy="tourist", reward=5),
+    dict(enemy="drunk", reward=6),
+    dict(enemy="bouncer", reward=7),
+    dict(enemy="gambler", reward=8),
+    dict(enemy="slot machine", reward=9),
+    dict(enemy="loan shark", reward=10),
     dict(enemy="the house", boss=True),
 ]
 
@@ -99,7 +100,7 @@ POLICY = dict(lam=0.25, upgrade=0.5, late=2, bombs=2, potions=2, rerolls=3, keep
               grower=0.7, wild=0.6, ench=3, lvl_spare=0)
 
 # src/entities/player.p8.lua, src/logic/economy.p8.lua
-MAX_HP, START_COINS, BASE = 20, 20, dict(atk=1, spd=1, defn=0)
+MAX_HP, START_COINS, BASE = 40, 10, dict(atk=1, spd=1, defn=0)
 POTION_HEAL, BOMB_DMG, INV_SIZE, STACK_MAX = 5, 10, 3, 5
 STATS = ("atk", "spd", "defn")
 BAG = 3  # placement destination index for "unused": its value becomes coins
@@ -111,7 +112,9 @@ COL_MAX = 3  # most dice in one stat column (src/entities/slot.p8.lua)
 
 def fight(p, e, p_hp, e_hp):
     """p, e: dicts of atk/spd/defn. returns hp left (> 0 means a win, 0 a loss)."""
-    pd, ed = max(1, p["atk"] - e["defn"]), max(1, e["atk"] - p["defn"])
+    pd, ed = max(0, p["atk"] - e["defn"]), max(0, e["atk"] - p["defn"])
+    if pd == 0:
+        return 0
     t = -(-100 * -(-e_hp // pd) // (p["spd"] + 5))  # ceil(100 * ceil(hp/pd) / rate)
     if t > 1000:
         return 0

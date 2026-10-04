@@ -400,7 +400,7 @@ placement = scene:extend({
 		local c = win and 7 or 8
 		rectfill(24, 46, 103, 72, bg)
 		rect(24, 46, 103, 72, c)
-		txt(win and "win!" or "defeated", 64, 51, c, "c", true)
+		txt(win and "win!" or b:stalemate() and "no one can win" or "defeated", 64, 51, c, "c", true)
 		if gain.reward + gain.leftover > 0 then
 			txt("+"..gain.reward..cash.."\f6 win +"..gain.leftover..cash.."\f6 bag", 64, 62, 6, "c")
 		end

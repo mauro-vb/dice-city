@@ -2,8 +2,9 @@
 -- usage: b = battle:new({p = run, foe = enemy1}); each tick: hits = b:step()
 -- each hit: {who = "p" or "e", dmg, p_hp, e_hp} (hp after the hit)
 -- a bar fills by spd + 5 a tick; at 100 that side hits and keeps the leftover.
--- def blocks up to its value, but a hit always does at least 1, so every
--- fight plays out to the end. no randomness: dice are rolled before
+-- def blocks up to its value: a hit can do 0. if neither side can hurt the
+-- other, the fight runs 30 ticks (time for bombs), then it's a loss ("no one
+-- can win"). no randomness: dice are rolled before
 -- never changes the player or the enemy def; finish_fight applies the result
 -- debug: one-shot enemies, take no damage. off at the start, pause menu item
 -- 2 switches it (src/main); read when a fight starts
@@ -19,12 +20,15 @@ battle = class:extend({
 		p_hp, e_hp, max_hp = p.hp, foe.hp, p.max_hp
 		p_bar, e_bar, tick = 0, 0, 0
 		p_rate, e_rate = stats.spd + 5, foe.spd + 5
-		p_dmg = max(1, stats.atk - foe.def)
-		e_dmg = max(1, foe.atk - stats.def)
+		p_dmg = max(0, stats.atk - foe.def)
+		e_dmg = max(0, foe.atk - stats.def)
 		if god_mode then p_dmg, e_dmg = 9999, 0 end
 	end,
+	stalemate = function(_ENV)
+		return p_dmg + e_dmg == 0
+	end,
 	over = function(_ENV)
-		return p_hp <= 0 or e_hp <= 0 or tick >= 1000
+		return p_hp <= 0 or e_hp <= 0 or tick >= (stalemate(_ENV) and 30 or 1000)
 	end,
 	won = function(_ENV)
 		return e_hp <= 0

@@ -15,8 +15,8 @@ screen = scene:extend({
 		cls(bg)
 		text(_ENV)
 		-- the button is just text (p8scii \^o: outline colour + all 8 sides):
-		-- pink, white outline, dark grey when hovered
-		txt("\^o"..(f.cur == btn and dark or 7).."ff"..btn.label, 64, 82, 14, "c")
+		-- pink, black outline, white when hovered
+		txt("\^o"..(f.cur == btn and 7 or 0).."ff"..btn.label, 64, 82, 14, "c")
 		f:drw()
 	end,
 })

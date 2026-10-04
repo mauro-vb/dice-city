@@ -8,7 +8,7 @@ end
 
 test("a new run starts with no dice and no items", function()
 	local p = player:new()
-	check(#p.bag == 0 and p.coins == 20 and p.stage_i == 0)
+	check(#p.bag == 0 and p.coins == 10 and p.stage_i == 0)
 	check(#p.items == 0)
 end)
 

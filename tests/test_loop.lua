@@ -82,7 +82,7 @@ test("opening shop: fight locked until you buy", function()
 	check(shop.f.hover_t >= 30, "tooltip after half a second")
 	snap("opening_shop")
 	click(shop.cards[1])
-	check(#run.bag == 1 and run.coins < 20 and shop.fight_btn:is_on(), "bought")
+	check(#run.bag == 1 and run.coins < 10 and shop.fight_btn:is_on(), "bought")
 end)
 
 test("shop reroll: new offers, always 1", function()
@@ -90,7 +90,7 @@ test("shop reroll: new offers, always 1", function()
 	local before = shop.offers
 	click(shop.reroll_btn)
 	check(shop.offers != before and #shop.offers == 3, "new offers")
-	check(run.coins == 19 and shop.reroll_cost == 1, "paid 1, next still 1")
+	check(run.coins == 9 and shop.reroll_cost == 1, "paid 1, next still 1")
 end)
 
 test("drag between slots and back to the bag", function()
