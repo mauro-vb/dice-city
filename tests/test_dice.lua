@@ -29,11 +29,11 @@ test("an enemy's rolling stats roll into a copy", function()
 	local seen = {}
 	for _ = 1, 50 do
 		local f = roll_foe(enemy4)
-		check(f.atk == 5 or f.atk == 13, "gambler atk "..tostr(f.atk))
+		check(f.atk == 4 or f.atk == 12, "gambler atk "..tostr(f.atk))
 		check(f.def == enemy4.def, "fixed stats copied")
 		seen[f.atk] = true
 	end
-	check(seen[5] and seen[13], "both values come up")
+	check(seen[4] and seen[12], "both values come up")
 	check(type(enemy4.atk) == "table", "the def itself is untouched")
 	check(roll_foe(enemy1).atk == enemy1.atk, "nothing rolls: same stats")
 end)

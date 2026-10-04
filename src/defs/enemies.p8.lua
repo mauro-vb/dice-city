@@ -6,12 +6,12 @@
 -- a field with ";" is a stat that rolls one of its values when you roll (the
 -- enemy's die): the header shows its range until then. list it low to high
 --   enemy1 tourist     warm-up, weak at everything. anything works
---   enemy2 pickpocket  fast (a hit every 5 ticks), weak hits: def 6 makes it
+--   enemy2 pickpocket  fast (a hit every 5 ticks), weak hits: def 4 makes it
 --                      harmless
---   enemy3 bouncer     a wall: atk 7 or less does nothing, and it hits 7.
+--   enemy3 bouncer     a wall: atk 7 or less does nothing, and it hits 6.
 --                      stack atk, with some def
---   enemy4 gambler     all in on attack: rolls 5 or 13, no def. block 13,
---                      or block 5 and race it (a wild die reads the roll)
+--   enemy4 gambler     all in on attack: rolls 4 or 12, no def. block 12,
+--                      or block 4 and race it (a wild die reads the roll)
 --   enemy5 card sharp  glass cannon: one hit kills you, one hit (atk 12+)
 --                      kills it. spd 8+ strikes first (ties go to you)
 --   enemy6 loan shark  slow (a swing every 20 ticks) but 22 a hit: kill it
@@ -19,4 +19,4 @@
 --                      one and kill it before the second
 --   enemy7 the house   final boss, rolls every stat: atk over its def (5-10)
 --                      and def against its 11-16 a hit, all at once
-defs("id,name,hp,atk,spd,def,art,face_art", "enemy1,tourist,8,2,1,0,1,8|enemy2,pickpocket,18,6,14,0,5,12|enemy3,bouncer,22,7,2,7,2,9|enemy4,gambler,30,5;13,6,0,6,13|enemy5,card sharp,10,20,8,2,7,14|enemy6,loan shark,30,22,0,3,3,10|enemy7,the house,36,11;12;13;14;15;16,3;4;5;6;7;8,5;6;7;8;9;10,4,11")
+defs("id,name,hp,atk,spd,def,art,face_art", "enemy1,tourist,8,2,1,0,1,8|enemy2,pickpocket,16,4,14,0,5,12|enemy3,bouncer,22,6,2,7,2,9|enemy4,gambler,28,4;12,6,0,6,13|enemy5,card sharp,10,20,8,2,7,14|enemy6,loan shark,28,22,0,3,3,10|enemy7,the house,32,11;12;13;14;15;16,3;4;5;6;7;8,5;6;7;8;9;10,4,11")
