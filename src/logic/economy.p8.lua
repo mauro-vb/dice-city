@@ -10,11 +10,16 @@ function gen_offers()
 	return offers
 end
 
+-- what an unused die pays on a win: its roll, double for a greedy die
+function coin_value(d)
+	return (d.value or 0) * (d.kind.perk == "greedy" and 2 or 1)
+end
+
 -- unused dice were rolled with the rest: their values become coins
 function leftover_coins(dice)
 	local sum = 0
 	for d in all(dice) do
-		sum += d.value or 0
+		sum += coin_value(d)
 	end
 	return sum
 end

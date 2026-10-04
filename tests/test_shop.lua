@@ -100,6 +100,13 @@ test("opening shop: 3 dice + 1 item, later 1-2 dice then items", function()
 	end
 end)
 
+test("greedy: unused it pays double its roll", function()
+	fresh()
+	local g, d = run:add_die(dgr), run:add_die(d3)
+	g.value, d.value = 3, 3
+	check(leftover_coins(run:unused()) == 9)
+end)
+
 test("same seed, same opening shop", function()
 	new_run(7)
 	local a = gen_offers()

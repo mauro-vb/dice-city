@@ -17,7 +17,7 @@ end
 
 function die_tip(it, d, below)
 	local k, n = d.kind, #d.faces
-	local info = "avg "..d:avg_str()
+	local info = k.info or "avg "..d:avg_str()
 	-- squares (d6) and circles (d8) 10 px apart; triangles (d3) 13 px apart
 	local tri = n == 3
 	local x, y = tip_box(it, max(n * (tri and 13 or 10) + 5, max(#info, #k.name) * 4 + 6), 40, below)

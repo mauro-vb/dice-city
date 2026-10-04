@@ -292,7 +292,7 @@ placement = scene:extend({
 		end
 		for d in all(run:unused()) do
 			if d != f.held then d:drw() end
-			if not b and d.value and d.air == 0 then txt("+"..d.value, d.x, d.y - 10, 10, "c", true) end
+			if not b and d.value and d.air == 0 then txt("+"..coin_value(d), d.x, d.y - 10, 10, "c", true) end
 		end
 		hp_bar(2, 116, 58, p_shown, bars.p_trail, run.max_hp, 7, p_flash > 0)
 		charge_bar(2, 124, 58, bars.p_charge.v)
