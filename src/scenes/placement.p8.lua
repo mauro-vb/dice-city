@@ -180,6 +180,8 @@ placement = scene:extend({
 		upd_group(run.bag)
 		upd_group(parts)
 		if phase == "fight" then upd_fight(_ENV) end
+		-- a win's coins count up into the total once the result card is down
+		if card.ready and coins_shown < run.coins and t % 3 == 0 then coins_shown += 1 end
 		p_flash = max(0, p_flash - 1)
 		e_flash = max(0, e_flash - 1)
 	end,
@@ -198,7 +200,6 @@ placement = scene:extend({
 	end_fight = function(_ENV)
 		phase = "done"
 		gain, next_scene = finish_fight(b)
-		coins_shown = run.coins
 		-- freeze the charge bars: fresh tables, so the running charge tweens
 		-- keep writing into the old ones
 		bars.p_charge, bars.e_charge = {v = bars.p_charge.v}, {v = bars.e_charge.v}
@@ -277,17 +278,21 @@ placement = scene:extend({
 
 		rect(2, 91, 94, 108, dark) -- dice bag rect
 		if #run:unused() == 0 then txt("dice bag", 48, 98, dark, "c") end
-		if phase != "place" then txt("+"..(b and b.coins or leftover_coins(run:unused()))..cash, 93, 93, 6, "r") end
 		-- stage and coins under the button, next to the inventory
 		txt("stage "..run.stage_i, 126, 114, 7, "r")
 		txt(coins_shown..cash, 126, 121, 7, "r")
 		-- your rolled stats (kept by the battle) above your hp bar
+		-- before that, the same line explains the bag: dice you don't place
+		-- pay their roll as coins if you win (each landed one shows its +n)
 		if b then
 			local s = b.stats
 			print("atk"..s.atk.." spd"..s.spd.." def"..s.def, 2, 110, 6)
+		else
+			txt(phase == "place" and "unused dice = cash" or "win: +"..leftover_coins(run:unused())..cash.."\f6 from the bag", 2, 110, 6)
 		end
 		for d in all(run:unused()) do
 			if d != f.held then d:drw() end
+			if not b and d.value and d.air == 0 then txt("+"..d.value, d.x, d.y - 10, 10, "c", true) end
 		end
 		hp_bar(2, 116, 58, p_shown, bars.p_trail, run.max_hp, 7, p_flash > 0)
 		charge_bar(2, 124, 58, bars.p_charge.v)
@@ -324,7 +329,7 @@ placement = scene:extend({
 		rect(24, 46, 103, 72, c)
 		txt(win and "win!" or b:stalemate() and "no damage" or "defeated", 64, 51, c, "c", true)
 		if gain.reward + gain.leftover > 0 then
-			txt("+"..gain.reward.." +"..gain.leftover.." from the bag", 64, 62, 6, "c")
+			txt("+"..gain.reward..cash.."\f6 win +"..gain.leftover..cash.."\f6 bag", 64, 62, 6, "c")
 		end
 	end
 })
