@@ -20,4 +20,4 @@
 --   enemy7 the house   final boss, rolls every stat: atk over its def (5-10)
 --                      and def against its 11-16 a hit, all at once
 defs("id,name,hp,atk,spd,def,art,face_art",
-	"enemy1,tHE tOURIST,8,2,1,0,7,14|enemy2,tHE dRUNK,16,4,14,0,5,12|enemy3,tHE bOUNCER,22,6,2,7,2,9|enemy4,tHE gAMBLER,28,4;12,6,0,3,8|enemy5,tHE eLDER,35,100,-3,2,6,13|enemy6,tHE lOAN sHARK,28,22,0,3,3,10|enemy7,tHE hOUSE,32,11;12;13;14;15;16,3;4;5;6;7;8,5;6;7;8;9;10,4,11")
+	"enemy1,tHE tOURIST,8,2,1,0,7,14|enemy2,tHE dRUNK,16,4,14,0,5,12|enemy3,tHE bOUNCER,22,6,2,7,2,9|enemy4,tHE gAMBLER,28,4;12,6,0,3,8|enemy5,tHE eLDER,35,100,-3,2,6,13|enemy6,tHE lOAN sHARK,28,22,0,3,1,8|enemy7,tHE hOUSE,32,11;12;13;14;15;16,3;4;5;6;7;8,5;6;7;8;9;10,4,11")
