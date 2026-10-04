@@ -38,6 +38,6 @@ function grow(d)
 	for i = 1, #d.faces do
 		if d.faces[i] == lo then j = i end
 	end
-	d.faces[j] += 1
-	d.rigged[j] = 1
+	d.faces[j] += 2
+	d.rigged[j] = 2
 end
