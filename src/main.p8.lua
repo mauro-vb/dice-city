@@ -25,6 +25,12 @@ function toggle_music()
     menuitem(1, muted and "music on" or "music off", toggle_music)
 end
 
+-- pause menu item 2: god mode (src/logic/combat), for testing
+function toggle_god()
+    god_mode = not god_mode
+    menuitem(2, god_mode and "god mode: on" or "god mode: off", toggle_god)
+end
+
 function music_upd()
     local pat = stat(54)
     if want != playing and not muted then
@@ -42,6 +48,7 @@ function _init()
     music(0)
     want, playing = "menu", "menu"
     menuitem(1, "music off", toggle_music)
+    menuitem(2, "god mode: off", toggle_god)
     -- start at black: the title switches in on the first frame, then fades in
     scene:load(title)
     fade_t = 14

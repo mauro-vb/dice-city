@@ -116,7 +116,9 @@ shop = scene:extend({
 				next_stage()
 				scene:load(placement)
 			end,
-			enabled = function() return #run.bag > 0 end,
+			-- the opening shop needs a die; later an empty bag (the last glass die
+			-- broke) still fights on base stats, so a run can't get stuck
+			enabled = function() return #run.bag > 0 or run.stage_i > 0 end,
 		}))
 	end,
 

@@ -5,7 +5,9 @@
 -- def blocks up to its value, but a hit always does at least 1, so every
 -- fight plays out to the end. no randomness: dice are rolled before
 -- never changes the player or the enemy def; finish_fight applies the result
-god_mode = true-- debug: one-shot enemies, take no damage. set false to disable
+-- debug: one-shot enemies, take no damage. off at the start, pause menu item
+-- 2 switches it (src/main); read when a fight starts
+god_mode = false
 battle = class:extend({
 	-- stats and the bag's coins are taken now: after this, placement doesn't matter
 	init = function(_ENV)
