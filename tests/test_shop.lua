@@ -89,16 +89,22 @@ test("bag dice count as coins only after rolling", function()
 	check(leftover_coins(run:unused()) == 4)
 end)
 
-test("offers repeat from the pool", function()
-	local o = gen_offers({pool = {d3}, offers = 4})
-	check(#o == 4 and o[1] == d3 and o[4] == d3)
+test("opening shop: 3 dice + 1 item, later 1-2 dice then items", function()
+	new_run(3)
+	local o = gen_offers()
+	check(#o == 4 and o[3].faces and not o[4].faces, "3 + 1")
+	run.stage_i = 2
+	for i = 1, 20 do
+		o = gen_offers()
+		check(o[1].faces and not o[3].faces and not o[4].faces, "dice first")
+	end
 end)
 
 test("same seed, same opening shop", function()
 	new_run(7)
-	local a = gen_offers(stages[0])
+	local a = gen_offers()
 	new_run(7)
-	local b = gen_offers(stages[0])
+	local b = gen_offers()
 	for i = 1, #a do
 		check(a[i] == b[i])
 	end

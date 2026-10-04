@@ -1,8 +1,11 @@
--- offers can repeat
-function gen_offers(st)
-	local offers = {}
-	for i = 1, st.offers do
-		add(offers, rnd(st.pool))
+-- 4 offers, dice first: the opening shop is 3 dice + 1 item (you start with
+-- none), later shops a coin flip between 2 + 2 and 1 + 3, so a reroll can
+-- also bring the die you're after. every kind is equally likely, offers can
+-- repeat
+function gen_offers()
+	local offers, n = {}, run.stage_i == 0 and 3 or rnd{1, 2}
+	for i = 1, 4 do
+		add(offers, rnd(i <= n and dice_kinds or item_kinds))
 	end
 	return offers
 end
@@ -55,7 +58,7 @@ function can_use(i, b)
 	local s = run.items[i]
 	if not s then return false end
 	if s.k == potion then return (b and b.p_hp or run.hp) < run.max_hp end
-	if s.k == token or s.k == double or s.k == rig then return not b end
+	if s.k.aim then return not b end
 	return b and b.e_hp > 0
 end
 

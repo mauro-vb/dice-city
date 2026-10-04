@@ -37,12 +37,12 @@ from collections import Counter
 # --- copies of src/defs ----------------------------------------------------
 
 DICE = {  # src/defs/dice.p8.lua
-    "d6": dict(faces=[1, 2, 3, 4, 5, 6], price=3),
-    "gambler": dict(faces=[0, 0, 0, 6, 6, 6], price=5),
     "d3": dict(faces=[1, 2, 3], price=1),
-    "d3+": dict(faces=[3, 4, 5], price=4),
-    "d3++": dict(faces=[4, 5, 6], price=8),
-    "d8": dict(faces=[1, 2, 3, 4, 5, 6, 7, 8], price=5),
+    "d6": dict(faces=[1, 2, 3, 4, 5, 6], price=4),
+    "gambler": dict(faces=[0, 0, 0, 6, 6, 6], price=3),
+    "d3+": dict(faces=[3, 4, 5], price=5),
+    "d8": dict(faces=[1, 2, 3, 4, 5, 6, 7, 8], price=6),
+    "d3++": dict(faces=[4, 5, 6], price=7),
 }
 # src/defs/shop_items.p8.lua. the bot never buys "double" (a copy of a placed
 # die for one fight, needs a free bag spot: rarely possible with 5 dice)
@@ -60,18 +60,17 @@ ENEMIES = {
                        defn=list(range(4, 10))),
 }
 
-# src/defs/stages.p8.lua -- pool entries repeat to weight them; a stage's pool
-# stocks the shop after its fight
-POOL = ["d6", "d6", "d3", "d3", "gambler", "d3+", "d3++", "d8",
-        "potion", "reroll", "bomb", "double", "rig"]
+# src/defs/stages.p8.lua; the shop after each fight is src/logic/economy.p8.lua
+# gen_offers: 4 offers, 3 dice + 1 item in the opening shop, then 2 + 2 or
+# 1 + 3 (a coin flip), every kind equally likely
 STAGES = [
-    dict(pool=["d6", "d3"], offers=4, reward=0),  # 0: the opening shop, no fight
-    dict(enemy="tourist", reward=2, offers=3),
-    dict(enemy="pickpocket", reward=2, offers=3),
-    dict(enemy="bouncer", reward=3, offers=4),
-    dict(enemy="gambler", reward=3, offers=4),
-    dict(enemy="card sharp", reward=4, offers=4),
-    dict(enemy="loan shark", reward=4, offers=4),
+    dict(reward=0),  # 0: the opening shop, no fight
+    dict(enemy="tourist", reward=2),
+    dict(enemy="pickpocket", reward=2),
+    dict(enemy="bouncer", reward=3),
+    dict(enemy="gambler", reward=3),
+    dict(enemy="card sharp", reward=4),
+    dict(enemy="loan shark", reward=4),
     dict(enemy="the house", boss=True),
 ]
 
@@ -168,8 +167,8 @@ class Run:
             return
 
     def offers(self, stage):
-        pool = stage.get("pool", POOL)
-        return [self.rng.choice(pool) for _ in range(stage["offers"])]
+        n = 3 if "enemy" not in stage else self.rng.choice([1, 2])
+        return [self.rng.choice(list(DICE) if i < n else list(ITEMS)) for i in range(4)]
 
 
 def sell_price(d):

@@ -34,7 +34,7 @@ end
 shop = scene:extend({
 	init = function(_ENV)
 		global.parts = {}
-		offers = gen_offers(cur_stage())
+		offers = gen_offers()
 		reroll_cost = 1
 		build(_ENV)
 	end,
@@ -88,7 +88,7 @@ shop = scene:extend({
 			x = 104, y = 104, w = 44,
 			on_press = function()
 				if not run:spend(reroll_cost) then return end
-				offers = gen_offers(cur_stage())
+				offers = gen_offers()
 				reroll_cost += 1
 				build(_ENV)
 			end,

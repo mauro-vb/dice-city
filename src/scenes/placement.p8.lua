@@ -129,8 +129,7 @@ placement = scene:extend({
 	-- use the item in slot i: a bomb hits the enemy like an attack would,
 	-- a potion fills your bar (the fight's hp mid-fight, the run's before)
 	use_at = function(_ENV, i)
-		local k = run.items[i].k
-		if k == token or k == double or k == rig then
+		if run.items[i].k.aim then
 			aim = aim != i and i
 			return
 		end

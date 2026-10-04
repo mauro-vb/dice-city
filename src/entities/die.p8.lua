@@ -162,7 +162,7 @@ die = selectable:extend({
 		-- squash / stretch keeps the bottom edge on the ground: big squash for 3
 		-- frames after the final landing, then a small one for 2
 		local s = air > 0 and sq or land < 4 and 2 or land < 6 and 1 or 0
-		local tri, body, edge = #faces == 3, value and 7 or kind.rarity == 2 and 15 or 6, dark
+		local tri, body, edge = #faces == 3, value and 7 or kind.col, dark
 		local yy, w, h = y + hop + jump, (tri and 18 or 16) + s, 16 - s
 		local l, top, bot = x - w \ 2, yy + 8 - h, yy + 7
 		if temp then
