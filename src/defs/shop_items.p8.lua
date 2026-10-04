@@ -10,4 +10,8 @@
 --   wild    the one die you can still move after the roll
 --   glass   rolls double; 1 in 4 breaks when the fight starts
 defs("id,name,price,info,inv,aim,col", "potion,beer,3,heals 5 hp,1|bomb,bomb,6,10 damage (in a fight),1|token,reroll,3,reroll a die you rolled,1,rolled|double,double,4,copy a placed die (1 fight),1,place rolled|rig,rig,4,+2 to a random face,1,place|greedy,\fagreedy,4,unused: pays 2x roll,1,place,10|grower,\fbgrower,4,placed: low face +1,1,place,11|wild,\fewild,4,move it after the roll,1,place,14|glass,\fcglass,3,2x roll (1/4 breaks),1,place,12")
-item_kinds = names"potion,bomb,token,double,rig,greedy,grower,wild,glass"
+-- level ups: applied when bought (never in the inventory), lvl = added to
+-- every base stat ("lv": "lvl up++" is too wide for a shop card). own defs:
+-- an empty inv field would be "" (true)
+defs("id,name,price,info,lvl", "lvlup,lv up,6,+1 all base stats,1|lvlup1,lv up+,9,+2 all base stats,2|lvlup2,lv up++,12,+3 all base stats,3")
+item_kinds = names"potion,bomb,token,double,rig,greedy,grower,wild,glass,lvlup,lvlup1,lvlup2"

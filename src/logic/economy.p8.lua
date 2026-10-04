@@ -37,6 +37,12 @@ end
 function buy(k)
 	if not can_buy(k) then return false end
 	run:spend(k.price)
+	if k.lvl then
+		for s in all(stat_names) do
+			run.base[s] += k.lvl
+		end
+		return true
+	end
 	if k.inv then
 		local s = stack_for(k)
 		if s then s.n += 1 else add(run.items, {k = k, n = 1}) end

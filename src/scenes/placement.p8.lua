@@ -3,6 +3,8 @@
 
 
 placement = scene:extend({
+	-- >> during the fight: 3x speed (kept for the next fights)
+	fast = false,
 	init = function(_ENV)
 		global.parts = {}
 		phase = "place"
@@ -28,7 +30,7 @@ placement = scene:extend({
 		end
 		f:item(selectable:new({
 			x = 48, y = 100, w = 92, h = 17,
-			accepts = function() return true end,
+			accepts = function(_, d) return d.class == die end,
 			on_drop = function(_, d) run:unplace(d) end,
 		}))
 		for d in all(run.bag) do
@@ -39,6 +41,7 @@ placement = scene:extend({
 		act_btn = f:item(button:new({
 			x = 112, y = 100, h = 17,
 			on_press = function()
+				if phase == "fight" then fast = not fast return end
 				if phase == "done" then return scene:load(next_scene) end
 				if phase == "rolled" then return start_fight(_ENV) end
 				-- values first, then the show: columns left to right, bottom die
@@ -62,21 +65,22 @@ placement = scene:extend({
 				roll_t, roll_end = 0, 40 + 10 * #order
 				phase = "rolled"
 			end,
-			enabled = function() return phase == "place" or phase == "rolled" and roll_t >= roll_end or phase == "done" and card.ready end,
+			enabled = function() return phase == "place" or phase == "fight" or phase == "rolled" and roll_t >= roll_end or phase == "done" and card.ready end,
 		}))
-		-- inventory: potions any time, bombs mid-fight, rerolls after rolling
-		-- (press the reroll, then a die: aim = the slot being aimed)
-		aim = false
-		pick = function(d)
+		-- inventory: potions any time, bombs mid-fight. aim items (reroll, rig,
+		-- double, enchantments) are carried to a die and used on it when dropped
+		use_on = function(d, s)
+			-- focus:drop left the slot where it was dropped: back in its row
+			-- (inv_slots' spacing)
+			s.x, s.y = 58 + s.i * 11, 121
 			-- a double adds a die: it joins the focus list too
-			local k = use_item(aim, false, d)
+			local k = use_item(s.i, false, d)
 			if k == double then f:item(run.bag[#run.bag]) end
 			if k == token then
 				d:roll_anim(0)
 				-- [sfx 32: dice roll] a reroll item
 				sfx(32, 3)
 			end
-			aim = false
 		end
 		inv = inv_slots(f, 121, function(i) use_at(_ENV, i) end, function(i)
 			local s = run.items[i]
@@ -88,7 +92,7 @@ placement = scene:extend({
 
 	-- the battle runs live once the intro tween ends
 	start_fight = function(_ENV)
-		phase, aim = "intro", false
+		phase = "intro"
 		-- [sfx 36: enemy appearance] the fight intro starts
 		sfx(36)
 		-- the battle takes the stats and bag coins now; then every die goes back
@@ -136,10 +140,6 @@ placement = scene:extend({
 	-- use the item in slot i: a bomb hits the enemy like an attack would,
 	-- a potion fills your bar (the fight's hp mid-fight, the run's before)
 	use_at = function(_ENV, i)
-		if run.items[i].k.aim then
-			aim = aim != i and i
-			return
-		end
 		local k = use_item(i, phase == "fight" and b)
 		if k == bomb then
 			-- [sfx 39: bomb]
@@ -171,10 +171,14 @@ placement = scene:extend({
 
 		for d in all(run.bag) do
 			-- a wild die can still move once you've seen the rolls
-			d.pickable = (phase == "place" or phase == "rolled" and d.ench == wild) and not aim
-			d.on_press = aim and pick
+			d.pickable = phase == "place" or phase == "rolled" and d.ench == wild
+			d.accepts, d.on_drop = function(_, s) return s.class == item_slot end, use_on
 		end
-		act_btn.label = phase == "place" and "roll" or phase == "done" and "next" or "fight"
+		for s in all(inv) do
+			local it = run.items[s.i]
+			s.pickable = it and it.k.aim
+		end
+		act_btn.label = phase == "place" and "roll" or phase == "done" and "next" or phase == "fight" and (fast and "x3" or ">>") or "fight"
 		f:upd()
 		-- a press can switch scenes (next -> shop): stop, or this screen's layout
 		-- would overwrite the shop's dice targets
@@ -184,7 +188,17 @@ placement = scene:extend({
 		global.shake = max(0, shake - 1)
 		upd_group(run.bag)
 		upd_group(parts)
-		if phase == "fight" then upd_fight(_ENV) end
+		-- x3: the fight, its tweens and particles run 3 steps a frame (input
+		-- stays once a frame, so a click never counts 3 times)
+		for i = 1, fast and 3 or 1 do
+			if phase == "fight" then
+				if i > 1 then
+					tween.upd()
+					upd_group(parts)
+				end
+				upd_fight(_ENV)
+			end
+		end
 		-- a win's coins count up into the total once the result card is down
 		if card.ready and coins_shown < run.coins and t % 3 == 0 then coins_shown += 1 end
 		p_flash = max(0, p_flash - 1)
@@ -264,7 +278,6 @@ placement = scene:extend({
 			stats ..= sub(k, 1, 1)..(type(v) == "table" and v[1].."-"..v[#v] or v).." "
 		end
 		print(stats, hx, 22, 6)
-		if aim then txt("pick a die", 127, 22, 8, "r") end
 		line(0, 29, 127, 29, dark)
 
 		-- middle band: columns and their dice, dropping out during the intro
@@ -305,10 +318,6 @@ placement = scene:extend({
 		hp_bar(2, 116, 58, p_shown, bars.p_trail, run.max_hp, 7, p_flash > 0)
 		charge_bar(2, 124, 58, bars.p_charge.v)
 		drw_group(inv)
-		if aim then
-			local s = inv[aim]
-			rect(s.x - 6, s.y - 6, s.x + 5, s.y + 5, 8)
-		end
 		act_btn:drw()
 		drw_group(parts)
 		camera()
@@ -335,7 +344,7 @@ placement = scene:extend({
 		local c = win and 7 or 8
 		rectfill(24, 46, 103, 72, bg)
 		rect(24, 46, 103, 72, c)
-		txt(win and "win!" or b:stalemate() and "no damage" or "defeated", 64, 51, c, "c", true)
+		txt(win and "win!" or "defeated", 64, 51, c, "c", true)
 		if gain.reward + gain.leftover > 0 then
 			txt("+"..gain.reward..cash.."\f6 win +"..gain.leftover..cash.."\f6 bag", 64, 62, 6, "c")
 		end

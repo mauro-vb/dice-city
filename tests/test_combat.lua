@@ -28,13 +28,13 @@ test("a fixed fight gives the expected events", function()
 	check(r.win and r.hp_left == 16)
 end)
 
-test("def can block every point of damage", function()
+test("def blocks all but 1: a hit always does at least 1", function()
 	local p = fighter(3, 1, 3)
 	local r = fight(p, {hp = 6, atk = 2, spd = 1, def = 0})
 	for ev in all(r.events) do
-		if ev.who == "e" then check(ev.dmg == 0, "enemy hit for "..ev.dmg) end
+		if ev.who == "e" then check(ev.dmg == 1, "enemy hit for "..ev.dmg) end
 	end
-	check(r.win and r.hp_left == 20)
+	check(r.win and r.hp_left < 20)
 end)
 
 test("def reduces damage by its value", function()
@@ -43,10 +43,11 @@ test("def reduces damage by its value", function()
 	check(r.events[1].who == "e" and r.events[1].dmg == 4)
 end)
 
-test("nobody can hurt anybody: a loss at once", function()
+test("both blocked: 1 a hit, the fight plays out", function()
 	local p = fighter(1, 1, 5)
 	local r = fight(p, {hp = 6, atk = 2, spd = 1, def = 4})
-	check(not r.win and #r.events == 0 and r.hp_left == 20)
+	-- same speed, the player hits first: 6 hits to the enemy's 5
+	check(r.win and #r.events == 11 and r.hp_left == 15)
 end)
 
 test("player wins ties", function()

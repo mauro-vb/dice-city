@@ -15,11 +15,11 @@ tests/test_combat.lua): stats are fixed once the dice are rolled, so a fight is
 deterministic and has a closed form instead of a tick loop:
   - a side with speed s fills its bar by s + 5 a tick and hits at 100, so its
     k-th hit lands on tick ceil(100 * k / (s + 5))
-  - a hit does max(0, atk - other side's def)
+  - a hit does max(1, atk - other side's def)
   - the player needs n = ceil(enemy hp / dmg) hits, landing on tick t
   - the enemy gets floor((t - 1) * rate / 100) hits in before that (the
     player hits first within a tick, so a hit on tick t itself never lands)
-  - over at tick 1000, and a fight nobody can win is a loss
+  - over at tick 1000 (a loss)
 
 The scripted players:
   smart  - searches dice placements for the best win chance (then hp kept,
@@ -51,6 +51,10 @@ for _name, _top, _price in (("d3", 3, 1), ("d6", 6, 4), ("d8", 8, 6)):
 ITEMS = {"potion": 3, "bomb": 6, "reroll": 3, "double": 4, "rig": 4,
          "greedy": 4, "grower": 4, "wild": 4, "glass": 3}
 ENCH = ("greedy", "grower", "wild", "glass")
+# level ups: bought = every base stat + n for the rest of the run (never in
+# the inventory)
+LVL = {"lvl up": 1, "lvl up+": 2, "lvl up++": 3}
+ITEMS.update({"lvl up": 6, "lvl up+": 9, "lvl up++": 12})
 
 # src/defs/enemies.p8.lua -- a list is a stat that rolls one of its values
 ENEMIES = {
@@ -86,7 +90,7 @@ STAGES = [
 # = what those enchantments are worth in average, ench = from how many dice
 # it buys enchantments
 POLICY = dict(lam=0.25, upgrade=0.5, late=2, bombs=2, potions=2, rerolls=3, keep=1,
-              grower=0.7, wild=0.6, ench=3)
+              grower=0.7, wild=0.6, ench=3, lvl_spare=0)
 
 # src/entities/player.p8.lua, src/logic/economy.p8.lua
 MAX_HP, START_COINS, BASE = 20, 20, dict(atk=1, spd=1, defn=0)
@@ -101,9 +105,7 @@ COL_MAX = 3  # most dice in one stat column (src/entities/slot.p8.lua)
 
 def fight(p, e, p_hp, e_hp):
     """p, e: dicts of atk/spd/defn. returns hp left (> 0 means a win, 0 a loss)."""
-    pd, ed = max(0, p["atk"] - e["defn"]), max(0, e["atk"] - p["defn"])
-    if pd == 0:
-        return 0
+    pd, ed = max(1, p["atk"] - e["defn"]), max(1, e["atk"] - p["defn"])
     t = -(-100 * -(-e_hp // pd) // (p["spd"] + 5))  # ceil(100 * ceil(hp/pd) / rate)
     if t > 1000:
         return 0
@@ -125,6 +127,7 @@ class Run:
         self.hp, self.coins = MAX_HP, START_COINS
         self.bag = []  # dice: {"kind": name, "faces": [...]} (rig changes faces)
         self.items = Counter()
+        self.lvl = 0  # level ups bought: + this to every base stat
 
     def shop(self, stage, idx=0):
         """buys like a good player (POLICY tunes it; see main --policy):
@@ -139,6 +142,14 @@ class Run:
         while True:
             if self.hp <= MAX_HP - POTION_HEAL and self.can_buy_item("potion", offers):
                 self.buy_item("potion", offers)
+                continue
+            # level up: the biggest one offered that it can afford
+            lvls = [k for k in LVL if k in offers and self.coins >= ITEMS[k] + P["lvl_spare"]]
+            if lvls:
+                k = max(lvls, key=LVL.get)
+                self.coins -= ITEMS[k]
+                self.lvl += LVL[k]
+                offers.remove(k)
                 continue
             full = len(self.bag) >= BAG_MAX
             dice = [o for o in offers if o in DICE]
@@ -241,10 +252,10 @@ def roll(rng, d):
     return rng.choice(d["faces"]) * (2 if perk(d) == "glass" else 1)
 
 
-def stats_of(bag, place, values):
+def stats_of(bag, place, values, lvl=0):
     """values are the rolls (glass already doubled); an unused greedy die
-    pays 2x."""
-    s = dict(BASE)
+    pays 2x. lvl: level ups bought, added to every base stat"""
+    s = {k: v + lvl for k, v in BASE.items()}
     coins = 0
     for i, dest in enumerate(place):
         if dest == BAG:
@@ -260,7 +271,7 @@ def score(run, enemy, place, samples):
     total = 0.0
     e_hp = ENEMIES[enemy]["hp"]
     for values, foe in samples:
-        s, coins = stats_of(run.bag, place, values)
+        s, coins = stats_of(run.bag, place, values, run.lvl)
         left = fight(s, foe, run.hp, e_hp)
         if left:
             total += 300 + left + 0.5 * coins
@@ -358,7 +369,7 @@ def play_fight(run, enemy, style):
                     continue
                 trial = place[:]
                 trial[i] = dest
-                st, c = stats_of(run.bag, trial, values)
+                st, c = stats_of(run.bag, trial, values, run.lvl)
                 key = (fight(st, foe, run.hp, e_hp), c)
                 if best is None or key > best[0]:
                     best = (key, trial)
@@ -369,7 +380,7 @@ def play_fight(run, enemy, style):
             f = d["faces"]
             j = max(k for k in range(len(f)) if f[k] == min(f))
             f[j] += 1
-    s, coins = stats_of(run.bag, place, values)
+    s, coins = stats_of(run.bag, place, values, run.lvl)
     run.last_stats = s
     left = fight(s, foe, run.hp, e_hp)
     if style != "smart":
@@ -384,14 +395,14 @@ def play_fight(run, enemy, style):
             for f in run.bag[i]["faces"]:
                 v = values[:]
                 v[i] = f
-                wins += fight(stats_of(run.bag, place, v)[0], foe, run.hp, e_hp) > 0
+                wins += fight(stats_of(run.bag, place, v, run.lvl)[0], foe, run.hp, e_hp) > 0
             if wins > best_p:
                 best_i, best_p = i, wins
         if best_i is not None:
             run.items["reroll"] -= 1
             values[best_i] = roll(run.rng, run.bag[best_i])
             broke[best_i] = perk(run.bag[best_i]) == "glass" and run.rng.random() < 0.25
-            s, coins = stats_of(run.bag, place, values)
+            s, coins = stats_of(run.bag, place, values, run.lvl)
             left = fight(s, foe, run.hp, e_hp)
     # potions and bombs mid-fight, only when they turn the loss around
     # (approximation: a potion counts as +5 hp, as if drunk at the right moment)

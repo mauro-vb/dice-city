@@ -4,7 +4,7 @@ slot = selectable:extend({
 	w = 38,
 	h = 64,
 	accepts = function(_ENV, item)
-		return item.slot == key or #run.slots[key] < 3
+		return item.class == die and (item.slot == key or #run.slots[key] < 3)
 	end,
 	on_drop = function(_ENV, d)
 		run:place(d, key)

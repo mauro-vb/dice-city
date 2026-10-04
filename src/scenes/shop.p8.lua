@@ -20,7 +20,8 @@ card = selectable:extend({
 -- item k's icon centred on x, y at scale s: 1 on a shop card, .5 in an
 -- inventory slot (src/ui/item_slot.p8.lua). double: two overlapping dice;
 -- reroll token: a die outline with +1; beer (potion): myspr
--- region 17; an enchantment: a circle in its colour. bomb: no icon yet
+-- region 17; rig: a white die with a red +2; level up: blue with +1/2/3; an
+-- enchantment: a circle in its colour. bomb: no icon yet
 function item_icon(k, x, y, s)
 	if k == potion then
 		local m = myspr[17]
@@ -31,6 +32,12 @@ function item_icon(k, x, y, s)
 	elseif k == token then
 		rrect(x - 8 * s, y - 8 * s, 16 * s, 16 * s, 3 * s, 6)
 		print("+1", x - 3, y - 2, 7)
+	elseif k == rig then
+		rrect(x - 8 * s, y - 8 * s, 16 * s, 16 * s, 3 * s, 7)
+		print("+2", x - 3, y - 2, 8)
+	elseif k.lvl then
+		rrect(x - 8 * s, y - 8 * s, 16 * s, 16 * s, 3 * s, 12)
+		print("+"..k.lvl, x - 3, y - 2, 7)
 	elseif k.col then
 		circfill(x, y, 6 * s, k.col)
 	end

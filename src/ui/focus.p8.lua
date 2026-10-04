@@ -95,7 +95,7 @@ focus = class:extend({
 		if held then
 			local ox, oy = held.x, held.y
 			held.x, held.y = mx, my
-			held:drw()
+			held:drw(true)
 			held.x, held.y = ox, oy
 		end
 		-- pointer: myspr region 15, or 16 while carrying a die or the button is
