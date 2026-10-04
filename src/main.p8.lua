@@ -1,6 +1,5 @@
 global = _ENV
 
-tween = ptween() -- src/utils/ptween.p8.lua
 t = 0
 
 function _init()
@@ -16,7 +15,7 @@ end
 function _update60()
 	t += 1
     pmb, mb = mb, stat(34) & 1
-    tween.upd()
+    upd_tws()
     -- scene fade (src/oop/scene): 0-14 out, the old scene frozen; 15 switch;
     -- 15-29 in; 30 idle
     fade_t = min(fade_t + 1, 30)

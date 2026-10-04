@@ -137,11 +137,7 @@ die = selectable:extend({
 		tx, ty = nx, ny
 		if moving or x == tx and y == ty then return end
 		moving = true
-		tween.new(_ENV):add({
-			parallel = true,
-			{k = "x", v = tx, f = 8, tr = "quad", ease = "out"},
-			{k = "y", v = ty, f = 8, tr = "quad", ease = "out"},
-		}):play(function() moving = false end)
+		tw(_ENV, {{f = 8, e = qout, x = tx, y = ty}}, function() moving = false end)
 	end,
 	upd = function(_ENV)
 		if tx then move_to(_ENV, tx, ty) end
@@ -153,10 +149,7 @@ die = selectable:extend({
 		-- restless idle face: a random other face and a small hop (visual only)
 		idle_t = 30 + rnd(10)
 		face_i = (face_i + flr(rnd(#faces - 1))) % #faces + 1
-		local tw = tween.new(_ENV)
-		tw:add({k = "hop", v = -2, f = 4, tr = "quad", ease = "out"})
-		tw:add({k = "hop", v = 0, f = 4, tr = "quad"})
-		tw:play()
+		tw(_ENV, {{f = 4, e = qout, hop = -2}, {f = 4, e = qin, hop = 0}})
 	end,
 	drw = function(_ENV)
 		-- squash / stretch keeps the bottom edge on the ground: big squash for 3

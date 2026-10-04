@@ -1,114 +1,42 @@
--- ptween v1.1
--- chainable tween library for pico-8
--- trimmed to what the game uses (more transitions, pausing and per-step
--- objects / call_backs are in git)
-ptween = function()
-	local Trans = {
-	    linear = function(t) return t end,
-	    quad = function(t) return t * t end,
-	    back = function(t)
-	        local s = 1.70158; return (s + 1) * t ^ 3 - s * t ^ 2
-	    end
-	}
+-- tweens: tw(obj, steps, done) plays steps one after another on obj; a step
+-- is {f = frames, e = ease, field = target, ...} (more fields = in parallel,
+-- no field = a wait). the start value is read on the step's first frame.
+-- eases: nil linear, qin / qout / qio quad in / out / in-out, bout back out
+-- usage: tw(d, {{f = 8, e = qout, x = 64, y = 30}, {f = 10}}, function() ... end)
+tws = {}
 
-	local Ease = {
-	    _in = function(f) return f end,
-	    out = function(f)
-	        return function(t)
-	            return 1 - f(1 - t)
-	        end
-	    end,
-	    inout = function(f)
-	        return function(t)
-	            if t < .5 then
-	                return f(t * 2) * .5
-	            end
-	            return 1 - f((1 - t) * 2) * .5
-	        end
-	    end
-	}
-    local routines = {}
+function qin(t) return t * t end
+function qout(t) return 1 - (1 - t) ^ 2 end
+function qio(t) return t < .5 and 2 * t * t or 1 - 2 * (1 - t) ^ 2 end
+function bout(t)
+	t = 1 - t
+	return 1 - 2.70158 * t ^ 3 + 1.70158 * t ^ 2
+end
 
-    -- call each frame
-    local function upd()
-        for r in all(routines) do
-            if costatus(r) == "dead" then
-                del(routines, r)
-            else
-                coresume(r)
-            end
-        end
-    end
+function tw(o, s, done)
+	add(tws, {o = o, s = s, done = done, i = 1, n = 0})
+end
 
-    -- one tween as a coroutine body
-    -- initial value is captured when the coroutine starts, not when :add() is called
-    local function make(obj, k, v, f, trans, ease)
-        local tr = (Ease[ease] or Ease._in)(Trans[trans] or Trans.linear)
-        return function()
-            local iv = obj[k] or 0
-            for i = 1, f do
-                obj[k] = iv + (v - iv) * tr(i / f)
-                yield()
-            end
-        end
-    end
-
-    -- create a new tween chain on table obj
-    --
-    -- usage:
-    --   tw:add({ k="x", v=100, f=30, tr="quad", ease="out" })
-    --   tw:add(15)                                 wait n frames
-    --   tw:add({ parallel=true, {k=..}, {k=..} })  parallel group
-    --   tw:play(final_call_back)
-    local function new_tw(obj)
-        local steps = {}
-        local tw = {}
-
-        function tw:add(step)
-            if type(step) == "number" then
-                add(steps, { make({}, "x", 0, step) })
-            elseif step.parallel then
-                local group = {}
-                for s in all(step) do
-                    add(group, make(obj, s.k, s.v, s.f, s.tr, s.ease))
-                end
-                add(steps, group)
-            else
-                add(steps, { make(obj, step.k, step.v, step.f, step.tr, step.ease) })
-            end
-            return self
-        end
-
-        -- start playing; fires final_call_back when all steps complete
-        function tw:play(final_call_back)
-            add(routines, cocreate(function()
-                for step in all(steps) do
-                    local cos = {}
-                    for a in all(step) do
-                        add(cos, cocreate(a))
-                    end
-                    local any = true
-                    while any do
-                        any = false
-                        for co in all(cos) do
-                            if costatus(co) != "dead" then
-                                coresume(co)
-                                any = true
-                            end
-                        end
-                        if any then yield() end
-                    end
-                end
-                if final_call_back then final_call_back() end
-            end))
-            return self
-        end
-
-        return tw
-    end
-
-    return {
-        new   = new_tw,
-        upd   = upd,
-    }
+-- once a frame (main's _update60)
+function upd_tws()
+	for w in all(tws) do
+		local s, o = w.s[w.i], w.o
+		if w.n == 0 then
+			w.a = {}
+			for k in pairs(s) do w.a[k] = o[k] end
+		end
+		w.n += 1
+		local p = w.n / s.f
+		if s.e then p = s.e(p) end
+		for k, v in pairs(s) do
+			if k != "f" and k != "e" then o[k] = w.a[k] + (v - w.a[k]) * p end
+		end
+		if w.n >= s.f then
+			w.n, w.i = 0, w.i + 1
+			if not w.s[w.i] then
+				del(tws, w)
+				if w.done then w.done() end
+			end
+		end
+	end
 end

@@ -118,13 +118,10 @@ placement = scene:extend({
 		for k, col in pairs(cols) do
 			del(f.items, col)
 		end
-		tween.new(stage):add({
-			parallel = true,
-			{k = "off", v = 64, f = 18, tr = "quad"},
-			{k = "small_x", v = -16, f = 12, tr = "quad"},
-			{k = "hx", v = 17, f = 16, tr = "quad", ease = "inout"},
-			{k = "foe_x", v = 64, f = 24, tr = "back", ease = "out"},
-		}):play(function()
+		tw(stage, {{f = 18, e = qin, off = 64}})
+		tw(stage, {{f = 12, e = qin, small_x = -16}})
+		tw(stage, {{f = 16, e = qio, hx = 17}})
+		tw(stage, {{f = 24, e = bout, foe_x = 64}}, function()
 			phase = "fight"
 			-- arrived: its walk-in line
 			say, say_t = foe.walk_in, 150
@@ -141,7 +138,7 @@ placement = scene:extend({
 		local c = {v = 0}
 		bars[who.."_charge"] = c
 		if b:over() then return end
-		tween.new(c):add({k = "v", v = 1, f = b:ticks_to(who) * 10}):play()
+		tw(c, {{f = b:ticks_to(who) * 10, v = 1}})
 	end,
 
 	-- use the item in slot i: a bomb hits the enemy like an attack would,
@@ -204,7 +201,7 @@ placement = scene:extend({
 		for i = 1, fast and 3 or 1 do
 			if phase == "fight" then
 				if i > 1 then
-					tween.upd()
+					upd_tws()
 					upd_group(parts)
 				end
 				upd_fight(_ENV)
@@ -240,7 +237,7 @@ placement = scene:extend({
 		-- 1.5 seconds, then drops in from above
 		say, say_t = b:won() and foe.beaten or foe.beat_you, 120
 		card = {y = -80}
-		tween.new(card):add(90):add({k = "y", v = 0, f = 30, tr = "back", ease = "out"}):play(function() card.ready = true end)
+		tw(card, {{f = 90}, {f = 30, e = bout, y = 0}}, function() card.ready = true end)
 	end,
 
 	-- one event: snap the hp number, flash, let the trail follow, recharge
@@ -259,7 +256,7 @@ placement = scene:extend({
 			-- the enemy lunges at you: quick step down, ease back. a fresh
 			-- table each hit, so two lunges never tween the same field
 			lunge = {y = 0}
-			tween.new(lunge):add({k = "y", v = 8, f = 3, tr = "quad"}):add({k = "y", v = 0, f = 8, tr = "quad", ease = "out"}):play()
+			tw(lunge, {{f = 3, e = qin, y = 8}, {f = 8, e = qout, y = 0}})
 		end
 		hurt_bar(_ENV, target, ev[target.."_hp"])
 		charge_next(_ENV, ev.who)
@@ -268,10 +265,7 @@ placement = scene:extend({
 	-- a side ("p" / "e") took damage: snap its number, flash, let the trail follow
 	hurt_bar = function(_ENV, side, hp)
 		_ENV[side.."_shown"], _ENV[side.."_flash"] = hp, 10
-		local tw = tween.new(bars)
-		tw:add(8)
-		tw:add({k = side.."_trail", v = hp, f = 20, tr = "quad", ease = "out"})
-		tw:play()
+		tw(bars, {{f = 8}, {f = 20, e = qout, [side.."_trail"] = hp}})
 	end,
 
 	drw = function(_ENV)

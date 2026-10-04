@@ -45,7 +45,7 @@ end
 -- pending tweens from an earlier test are dropped too
 function boot()
     scene.current = nil
-    tween = ptween()
+    tws = {}
     srand(42) -- the game seeds randomly; tests stay repeatable
     _init()
 end
