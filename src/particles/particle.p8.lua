@@ -1,6 +1,6 @@
 -- lightweight particle system (game_object-based), ported from an earlier
 -- project and trimmed to what the game uses (the full version is in git).
--- shapes live next to it: particle_circle.p8.lua (circlep). "particle.p8.lua"
+-- shapes live next to it: particle_circle.p8.lua (circlep, sparkp). "particle.p8.lua"
 -- sorts first in this folder ("." < "_"), so the base class is defined first.
 --
 -- usage:
@@ -63,27 +63,9 @@ particle = game_object:extend({
     end
 })
 
--- ---------------------------------------------------------------------
--- example usage: a small radial burst, e.g. call burst(x, y, 8) on a
--- hit/pickup/explosion
--- ---------------------------------------------------------------------
-function burst(x, y, col, n)
-    for i = 1, n do
-        local a = rnd(1) -- random angle, 0..1 pico-8 "turns"
-        circlep({
-            x = x, y = y,
-            c = type(col) == "table" and rnd(col) or col,
-            size = 1 + rnd(2),
-            sx = cos(a) * rnd(1),
-            sy = sin(a) * rnd(1),
-            maxage = 10 + rnd(10),
-            onend = "fade",
-         })
-    end
-end
-
 -- n dots from a die's bottom, up and out (any angle in the top half), speed
--- up to v, falling with gravity g; colours from cols. dust and sparks on landing
+-- up to v, falling with gravity g; colours from cols. dust and sparks on landing.
+-- lighter gravity lingers longer: 10 to 2 / g frames (sparks .1: 10-20)
 function spray(d, n, cols, v, g)
     for i = 1, n do
         local a, s = rnd(.5), rndrange(v / 2, v)
@@ -92,7 +74,7 @@ function spray(d, n, cols, v, g)
             c = rnd(cols),
             sx = cos(a) * s, sy = sin(a) * s,
             grav = g, drag = .9,
-            maxage = rndrange(10, 20),
+            maxage = rndrange(10, 2 / g),
         })
     end
 end

@@ -129,7 +129,7 @@ die = selectable:extend({
 	end,
 	-- dust and a white flash a bit bigger than the die
 	poof = function(_ENV)
-		spray(_ENV, 5, split"5,6", 1.5, .02)
+		spray(_ENV, 10, split"6,7", 1.5, .03)
 		circlep({x = x, y = y, size = 20, c = 7, maxage = 2})
 	end,
 	-- glide to a spot with a tween; a new target waits for the running tween

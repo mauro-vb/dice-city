@@ -206,12 +206,12 @@ placement = scene:extend({
 	hit = function(_ENV, ev)
 		ev_i += 1
 		local target = ev.who == "p" and "e" or "p"
+		-- hit-stop: the next tick waits longer the harder the hit
+		frames = -2 - ev.dmg \ 3
 		if target == "e" then
-			for i=1,ev.dmg do
-				burst(
-					rndrange(stage.foe_x - 10, stage.foe_x + 10),
-					rndrange(40, 70), {8, 2}, rndrange(5,14)
-				)
+			-- street fighter style sparks: one more per 4 damage, bigger with damage
+			for i = 0, ev.dmg \ 4 do
+				sparkp({x = stage.foe_x + rnd(16) - 8, y = 50 + rnd(16), size = min(4 + ev.dmg, 12), incrsize = 1, maxage = 6})
 			end
 		else
 			-- the enemy lunges at you: quick step down, ease back. a fresh
