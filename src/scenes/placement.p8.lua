@@ -181,7 +181,7 @@ placement = scene:extend({
 			d.pickable = phase == "place" or phase == "rolled" and d.ench == wild
 			d.accepts, d.on_drop = takes_item, use_on
 		end
-		act_btn.label = phase == "place" and "roll" or phase == "done" and "next" or phase == "fight" and (fast and "x3" or ">>") or "fight"
+		act_btn.label = phase == "place" and "roll" or phase == "done" and "next" or phase == "fight" and (fast and "normal" or "▶▶") or "fight"
 		f:upd()
 		-- a press can switch scenes (next -> shop): stop, or this screen's layout
 		-- would overwrite the shop's dice targets
