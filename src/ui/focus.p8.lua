@@ -9,10 +9,10 @@
 
 focus = class:extend({
 	init = function(_ENV)
-		-- mx, my: the pointer, off-screen until the first upd (a scene's first
-		-- drw can come before it, right after the click that loaded it).
+		-- mx, my: the pointer, where the mouse is (a new focus comes with every
+		-- scene and shop rebuild; its first drw can come before its first upd).
 		-- hover_t: frames the same item has been hovered (tooltips wait for it)
-		items, mx, my, hover_t = {}, -1, -1, 0
+		items, mx, my, hover_t = {}, stat(32), stat(33), 0
 	end,
 
 	item = function(_ENV, it)
