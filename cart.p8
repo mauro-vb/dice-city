@@ -1,7 +1,8 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
--- Application micro-dice-autobattler
+-- dice-city
+-- by mauro-vb
 
 #include src/oop/class.p8.lua
 #include src/oop/game_object.p8.lua
