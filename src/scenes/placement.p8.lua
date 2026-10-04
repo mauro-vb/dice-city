@@ -252,8 +252,9 @@ placement = scene:extend({
 		-- hit-stop: the next tick waits longer the harder the hit
 		frames = -2 - ev.dmg \ 3
 		if target == "e" then
-			-- street fighter style sparks: one more per 4 damage, bigger with damage
-			for i = 0, ev.dmg \ 4 do
+			-- street fighter style sparks: one more per 4 damage (3 at most: god
+			-- mode hits for 9999), bigger with damage
+			for i = 0, min(ev.dmg \ 4, 2) do
 				sparkp({x = stage.foe_x + rnd(16) - 8, y = 50 + rnd(16), size = min(4 + ev.dmg, 12), incrsize = 1, maxage = 6})
 			end
 		else
