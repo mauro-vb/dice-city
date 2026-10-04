@@ -84,22 +84,21 @@ die = selectable:extend({
 		end
 		w = #faces == 3 and 18 or 16
 	end,
-	lowest = function(_ENV)
-		return min_max_table(faces, "min")
-	end,
-	highest = function(_ENV)
-		return min_max_table(faces, "max")
-	end,
-	average = function(_ENV)
-		local sum = 0
-		for face in all(faces) do
-			sum += face
+	-- lowest and highest face
+	range = function(_ENV)
+		local lo, hi = 99, 0
+		for f in all(faces) do
+			lo, hi = min(lo, f), max(hi, f)
 		end
-		return sum / #faces
+		return lo, hi
 	end,
-	-- one decimal, for display
+	-- average face, one decimal, for display
 	avg_str = function(_ENV)
-		return tostr(flr(average(_ENV) * 10) / 10)
+		local sum = 0
+		for f in all(faces) do
+			sum += f
+		end
+		return tostr(flr(sum / #faces * 10) / 10)
 	end,
 	clear = function(_ENV)
 		value = false
@@ -124,13 +123,14 @@ die = selectable:extend({
 		-- squash touching the ground between hops, stretch while fast
 		sq = f < .15 and p > .2 and 1 or (f < .3 or f > .8) and -1 or 0
 		if air > 0 then return end
+		local lo, hi = range(_ENV)
 		land, jump, global.shake = 0, 0, 4
 		spray(_ENV, 5, split"5,6", 1.5, .02)
-		if value == highest(_ENV) then spray(_ENV, 8, split"10,9,7", 2.5, .1) end
+		if value == hi then spray(_ENV, 8, split"10,9,7", 2.5, .1) end
 		-- flash: a white circle a bit bigger than the die, then one in the
 		-- face's colour (dark grey lowest, yellow highest, white otherwise)
 		circlep({x = x, y = y, size = 20, c = 7, maxage = 2})
-		circlep({x = x, y = y, size = 18, c = value == lowest(_ENV) and dark or value == highest(_ENV) and 10 or 7, wait = 3, maxage = 4})
+		circlep({x = x, y = y, size = 18, c = value == lo and dark or value == hi and 10 or 7, wait = 3, maxage = 4})
 	end,
 	-- glide to a spot with a tween; a new target waits for the running tween
 	move_to = function(_ENV, nx, ny)
@@ -163,7 +163,7 @@ die = selectable:extend({
 		-- frames after the final landing, then a small one for 2
 		local s = air > 0 and sq or land < 4 and 2 or land < 6 and 1 or 0
 		local tri, body, edge = #faces == 3, value and 7 or kind.col, dark
-		local yy, w, h = y + hop + jump, (tri and 18 or 16) + s, 16 - s
+		local yy, w, h = y + hop + jump, w + s, 16 - s
 		local l, top, bot = x - w \ 2, yy + 8 - h, yy + 7
 		if temp then
 			body, edge = dark, 7

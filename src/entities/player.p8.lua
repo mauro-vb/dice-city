@@ -33,8 +33,9 @@ player = game_object:extend({
 	stat_range = function(_ENV, s)
 		local lo, hi = base[s], base[s]
 		for d in all(slots[s]) do
-			lo += d:lowest()
-			hi += d:highest()
+			local l, h = d:range()
+			lo += l
+			hi += h
 		end
 		return lo.."-"..hi
 	end,

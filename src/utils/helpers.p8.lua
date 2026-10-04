@@ -13,21 +13,6 @@ function rndrange(low, high)
 	return low + rnd(high - low)
 end
 
-function min_max_table(t, op)
-	if not t then
-		return nil
-	end
-	local val = t[1]
-	for c in all(t) do
-		if op == "max" then
-			val = max(val, c)
-		else
-			val = min(val, c)
-		end
-	end
-	return val
-end
-
 -- calls :upd() on every item in group -- entities, particles, anything game_object-based
 function upd_group(group)
     for e in all(group) do

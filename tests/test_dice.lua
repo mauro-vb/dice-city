@@ -18,9 +18,11 @@ test("d3 is wider than d6", function()
 	check(die:new({kind = d3}).w == 18 and die:new().w == 16)
 end)
 
-test("min_max_table", function()
-	check(min_max_table({3, 1, 5}, "max") == 5)
-	check(min_max_table({3, 1, 5}, "min") == 1)
+test("range: lowest and highest face", function()
+	local d = die:new({kind = d6})
+	d.faces[1] = 9
+	local lo, hi = d:range()
+	check(lo == 2 and hi == 9)
 end)
 
 test("an enemy's rolling stats roll into a copy", function()
