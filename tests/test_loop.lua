@@ -85,12 +85,12 @@ test("opening shop: fight locked until you buy", function()
 	check(#run.bag == 1 and run.coins < 20 and shop.fight_btn:is_on(), "bought")
 end)
 
-test("shop reroll: new offers, price goes up", function()
+test("shop reroll: new offers, always 1", function()
 	start_run()
 	local before = shop.offers
 	click(shop.reroll_btn)
-	check(shop.offers != before and #shop.offers == 4, "new offers")
-	check(run.coins == 19 and shop.reroll_cost == 2, "paid 1, next costs 2")
+	check(shop.offers != before and #shop.offers == 3, "new offers")
+	check(run.coins == 19 and shop.reroll_cost == 1, "paid 1, next still 1")
 end)
 
 test("drag between slots and back to the bag", function()

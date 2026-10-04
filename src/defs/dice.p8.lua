@@ -6,4 +6,4 @@
 -- prices (see tools/balance.py): 2 coins per point of average above 1.5,
 -- since an unused die pays its roll back every won fight
 defs("id,name,faces,price", "d3,d3,1;2;3,1|d3p,d3+,2;3;4,3|d3pp,d3++,3;4;5,5|d6,d6,1;2;3;4;5;6,4|d6p,d6+,2;3;4;5;6;7,6|d6pp,d6++,3;4;5;6;7;8,8|d8,d8,1;2;3;4;5;6;7;8,6|d8p,d8+,2;3;4;5;6;7;8;9,8|d8pp,d8++,3;4;5;6;7;8;9;10,10")
-dice_kinds = names"d3,d3p,d3pp,d6,d6p,d6pp,d8,d8p,d8pp"
+dice_kinds = names"d3,d6,d8,d3p,d6p,d8p,d3pp,d6pp,d8pp"

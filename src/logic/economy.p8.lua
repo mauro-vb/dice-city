@@ -1,11 +1,9 @@
--- 4 offers, dice first: the opening shop is 3 dice + 1 item (you start with
--- none), later shops a coin flip between 2 + 2 and 1 + 3, so a reroll can
--- also bring the die you're after. every kind is equally likely, offers can
--- repeat
+-- shop 1: 2 dice + 1 ench, shop 2: 1 die + 2 items, then 1 + 3. dice by
+-- tier: + from stage 2, ++ from 3. offers can repeat
 function gen_offers()
-	local offers, n = {}, run.stage_i == 0 and 3 or rnd{1, 2}
-	for i = 1, 4 do
-		add(offers, rnd(i <= n and dice_kinds or item_kinds))
+	local s, offers = run.stage_i, {}
+	for i = 1, s < 2 and 3 or 4 do
+		add(offers, i <= (s < 1 and 2 or 1) and dice_kinds[flr(rnd(min(9, max(3, 3 * s)))) + 1] or rnd(s < 1 and ench_kinds or item_kinds))
 	end
 	return offers
 end

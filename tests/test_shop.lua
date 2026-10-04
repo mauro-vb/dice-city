@@ -89,15 +89,43 @@ test("bag dice count as coins only after rolling", function()
 	check(leftover_coins(run:unused()) == 4)
 end)
 
-test("opening shop: 3 dice + 1 item, later 1-2 dice then items", function()
-	new_run(3)
-	local o = gen_offers()
-	check(#o == 4 and o[3].faces and not o[4].faces, "3 + 1")
-	run.stage_i = 2
-	for i = 1, 20 do
-		o = gen_offers()
-		check(o[1].faces and not o[3].faces and not o[4].faces, "dice first")
+-- dice tier: 0 plain, 1 = +, 2 = ++ (by name)
+function dice_tier(k)
+	local n = 0
+	for i = 1, #k.name do
+		if sub(k.name, i, i) == "+" then n += 1 end
 	end
+	return n
+end
+
+test("shop 1: 2 plain dice + 1 enchantment; shop 2: 1 die + 2 items", function()
+	new_run(3)
+	for i = 1, 20 do
+		local o = gen_offers()
+		check(#o == 3 and o[1].faces and o[2].faces and o[3].col, "2 + ench")
+		check(dice_tier(o[1]) == 0 and dice_tier(o[2]) == 0, "plain dice only")
+	end
+	run.stage_i = 1
+	for i = 1, 20 do
+		local o = gen_offers()
+		check(#o == 3 and o[1].faces and not o[2].faces and not o[3].faces, "1 + 2")
+		check(dice_tier(o[1]) == 0, "plain die only")
+	end
+end)
+
+test("from shop 3: 1 die + 3 items; + dice from stage 2, ++ from 3", function()
+	new_run(3)
+	local top = {}
+	for s = 2, 5 do
+		run.stage_i = s
+		top[s] = 0
+		for i = 1, 60 do
+			local o = gen_offers()
+			check(#o == 4 and o[1].faces and not o[2].faces and not o[4].faces, "1 + 3")
+			top[s] = max(top[s], dice_tier(o[1]))
+		end
+	end
+	check(top[2] == 1 and top[3] == 2 and top[5] == 2, "tiers "..top[2]..top[3]..top[5])
 end)
 
 test("greedy: unused it pays double its roll", function()

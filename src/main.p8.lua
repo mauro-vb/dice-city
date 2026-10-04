@@ -2,11 +2,46 @@ global = _ENV
 
 t = 0
 
+-- [music] segments of the song in cart.p8's __music__, as {first, last}
+-- pattern; each loops (loop-start flag on first, loop-end on last) until
+-- another one is wanted. channels 0-2 are music, 3 is always free for sfx
+segs = {menu = {0, 2}, fight1 = {8, 13}}
+
+-- a scene asks for a segment; it starts once the playing pattern has
+-- finished, so the change lands on the beat
+function want_music(name) want = name end
+
+-- silence until the next want_music (nothing is wanted or playing)
+function stop_music()
+    music(-1)
+    want, playing = nil
+end
+
+-- pause menu item 1: music off / on. off stops the song and keeps what's
+-- wanted, so on brings back the right segment
+function toggle_music()
+    muted, playing = not muted
+    music(-1)
+    menuitem(1, muted and "music on" or "music off", toggle_music)
+end
+
+function music_upd()
+    local pat = stat(54)
+    if want != playing and not muted then
+        -- done: the playing pattern just ended (the next one started)
+        if not segs[playing] or pat != ppat then
+            music(segs[want][1])
+            playing, pat = want, -1
+        end
+    end
+    ppat = pat
+end
+
 function _init()
     color_settings()
-    -- [music] the song from sound/music.p8 (patterns 0-5: intro 0-2, then
-    -- 3-5 loop), on channels 0-2; channel 3 is always free for sound effects
     music(0)
+    want, playing = "menu", "menu"
+    menuitem(1, "music off", toggle_music)
     -- start at black: the title switches in on the first frame, then fades in
     scene:load(title)
     fade_t = 14
@@ -14,6 +49,7 @@ end
 
 function _update60()
 	t += 1
+    music_upd()
     pmb, mb = mb, stat(34) & 1
     upd_tws()
     -- scene fade (src/oop/scene): 0-14 out, the old scene frozen; 15 switch;

@@ -3,7 +3,7 @@
 
 
 placement = scene:extend({
-	-- >> during the fight: 3x speed (kept for the next fights)
+	-- >> during the fight: 3x speed (resets each fight)
 	fast = false,
 	init = function(_ENV)
 		global.parts = {}
@@ -21,6 +21,7 @@ placement = scene:extend({
 		-- the stage's story screen first: story = its text until a click, story_t
 		-- = frames shown (the boxes appear one by one)
 		story, story_t = cur_stage().story, 0
+		if not story then global.want_music("fight1") end
 		-- roll animation: roll_t counts frames since the roll; fight waits for roll_end
 		roll_t, roll_end, global.shake = 0, 0, 0
 		p_shown, e_shown, p_flash, e_flash = run.hp, foe.hp, 0, 0
@@ -57,14 +58,13 @@ placement = scene:extend({
 				for i = 1, #order do
 					order[i]:roll_anim(i - 1)
 				end
-				-- [sfx 32 / 43 / 44 / 41: dice roll]
+				-- [sfx 32 / 43 / 44: dice roll]
 				-- one roll sound per die (up to 3) on channels 3, 2, 1 at once (the
 				-- 2nd and 3rd briefly take over music channels), each from a
 				-- different note so they don't sound as one. an sfx plays on one
-				-- channel at a time, so 43 and 44 are copies of 32 (cart.p8 only);
-				-- the other dice sound (41) one time in four
+				-- channel at a time, so 43 and 44 are copies of 32 (cart.p8 only)
 				for i = 1, min(#order, 3) do
-					sfx(rnd(4) < 1 and 41 or i < 2 and 32 or 41 + i, 4 - i, i * 3 - 3)
+					sfx(i < 2 and 32 or 41 + i, 4 - i, i * 3 - 3)
 				end
 				-- last landing at 30 + 10n, totals 10 frames later
 				roll_t, roll_end = 0, 40 + 10 * #order
@@ -123,6 +123,7 @@ placement = scene:extend({
 		tw(stage, {{f = 16, e = qio, hx = 17}})
 		tw(stage, {{f = 24, e = bout, foe_x = 64}}, function()
 			phase = "fight"
+			fast = false
 			-- arrived: its walk-in line
 			say, say_t = foe.walk_in, 150
 			charge_next(_ENV, "p")
@@ -174,7 +175,7 @@ placement = scene:extend({
 	upd = function(_ENV)
 		if story then
 			story_t += 1
-			if mb > pmb then story = false end
+			if mb > pmb then story = false global.want_music("fight1") end
 			return
 		end
 		for d in all(run.bag) do
@@ -229,7 +230,10 @@ placement = scene:extend({
 		phase = "done"
 		gain, next_scene = finish_fight(b)
 		-- [sfx 37: defeat] the fight is lost
-		if not b:won() then sfx(37) end
+		if not b:won() then
+			global.stop_music()
+			sfx(37)
+		end
 		-- freeze the charge bars: fresh tables, so the running charge tweens
 		-- keep writing into the old ones
 		bars.p_charge, bars.e_charge = {v = bars.p_charge.v}, {v = bars.e_charge.v}
