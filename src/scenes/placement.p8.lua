@@ -357,7 +357,7 @@ placement = scene:extend({
 			rect(x + 1, y + 1, x + w + 6, y + h - 2, 0)
 			print(bs[i], x + 4, y + 4, 0)
 		end
-		txt("cLICK TO GO ON", 64, 118, dark, "c")
+		txt("click to go on", 64, 118, dark, "c")
 		mspr(myspr[15], stat(32), stat(33))
 	end,
 
