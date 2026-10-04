@@ -1,6 +1,6 @@
 -- one inventory slot (10x10): shows = the item kind in it (or false),
 -- n = how many are stacked (drawn when more than one)
--- usage: item_slot:new({x = 69, y = 119, on_press = ..., enabled = ...})
+-- usage: item_slot:new({x = 69, y = 120, on_press = ..., enabled = ...})
 item_slot = selectable:extend({
 	w = 10,
 	h = 10,

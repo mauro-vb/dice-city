@@ -66,7 +66,7 @@ placement = scene:extend({
 			if k == token then d:roll_anim(0) end
 			aim = false
 		end
-		inv = inv_slots(f, 120, function(i) use_at(_ENV, i) end, function(i)
+		inv = inv_slots(f, 121, function(i) use_at(_ENV, i) end, function(i)
 			local s = run.items[i]
 			if s and s.k.aim then return count(split(s.k.aim, " "), phase) > 0 end
 			return phase != "intro" and phase != "done" and can_use(i, phase == "fight" and b)

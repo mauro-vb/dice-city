@@ -9,15 +9,10 @@
 
 focus = class:extend({
 	init = function(_ENV)
-		items = {}
-		cur = false
-		held = false
-		mouse_on = false
-		-- off-screen start: the first frame counts as a mouse move, so the
-		-- pointer shows right after a click that changed the scene
-		mx, my = -1, -1
-		-- frames the same item has been hovered (tooltips wait for it)
-		hover_t, last = 0, false
+		-- mx, my start off-screen: the first frame counts as a mouse move, so
+		-- the pointer shows right after a click that changed the scene.
+		-- hover_t: frames the same item has been hovered (tooltips wait for it)
+		items, cur, held, mouse_on, mx, my, hover_t, last = {}, false, false, false, -1, -1, 0, false
 		-- global, written by the tooltip (a field here would hide it)
 		global.tip_area = false
 	end,
@@ -131,11 +126,11 @@ focus = class:extend({
 	end,
 
 	upd_keys = function(_ENV, x_hit, o_hit)
-		local dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
 		for b = 0, 3 do
 			if btnp(b) then
 				mouse_on = false
-				move(_ENV, dirs[b + 1][1], dirs[b + 1][2])
+				-- left, right, up, down
+				move(_ENV, split"-1,1,0,0"[b + 1], split"0,0,-1,1"[b + 1])
 			end
 		end
 		if x_hit then

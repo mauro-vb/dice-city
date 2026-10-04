@@ -83,7 +83,7 @@ shop = scene:extend({
 			f:item(d)
 		end
 		-- inventory: only beers (potions) can be used in the shop
-		inv = inv_slots(f, 119, function(i)
+		inv = inv_slots(f, 120, function(i)
 			if use_item(i) then build(_ENV) end
 		end, function(i)
 			local s = run.items[i]
