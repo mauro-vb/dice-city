@@ -44,22 +44,14 @@ placement = scene:extend({
 				if phase == "rolled" then return start_fight(_ENV) end
 				-- values first, then the show: columns left to right, bottom die
 				-- first, bag dice last, each landing 10 frames after the one before
-				run:roll_all()
+				local order = run:roll_all()
 				-- the enemy rolls with you (only some have stats that roll)
 				foe = roll_foe(foe)
-				local n = 0
-				for k in all(stat_names) do
-					for d in all(run.slots[k]) do
-						d:roll_anim(n)
-						n += 1
-					end
-				end
-				for d in all(run:unused()) do
-					d:roll_anim(n)
-					n += 1
+				for i = 1, #order do
+					order[i]:roll_anim(i - 1)
 				end
 				-- last landing at 30 + 10n, totals 10 frames later
-				roll_t, roll_end = 0, 40 + 10 * n
+				roll_t, roll_end = 0, 40 + 10 * #order
 				phase = "rolled"
 			end,
 			enabled = function() return phase == "place" or phase == "rolled" and roll_t >= roll_end or phase == "done" and card.ready end,
@@ -76,9 +68,7 @@ placement = scene:extend({
 		end
 		inv = inv_slots(f, 120, function(i) use_at(_ENV, i) end, function(i)
 			local s = run.items[i]
-			if s and s.k == token then return phase == "rolled" end
-			if s and s.k == double then return phase == "place" or phase == "rolled" end
-			if s and s.k == rig then return phase == "place" end
+			if s and s.k.aim then return count(split(s.k.aim, " "), phase) > 0 end
 			return phase != "intro" and phase != "done" and can_use(i, phase == "fight" and b)
 		end)
 		layout(_ENV)
