@@ -14,6 +14,8 @@ placement = scene:extend({
 		-- the header moves left to centre its bars (hx), the big art comes in (foe_x)
 		stage = {off = 0, small_x = 15, hx = 32, foe_x = -30}
 		lunge = {y = 0}
+		-- speech bubble by the enemy art: say = the line, say_t = frames left
+		say, say_t = false, 0
 		-- roll animation: roll_t counts frames since the roll; fight waits for roll_end
 		roll_t, roll_end, global.shake = 0, 0, 0
 		p_shown, e_shown, p_flash, e_flash = run.hp, foe.hp, 0, 0
@@ -117,6 +119,8 @@ placement = scene:extend({
 			{k = "foe_x", v = 64, f = 24, tr = "back", ease = "out"},
 		}):play(function()
 			phase = "fight"
+			-- arrived: its walk-in line
+			say, say_t = foe.walk_in, 150
 			charge_next(_ENV, "p")
 			charge_next(_ENV, "e")
 		end)
@@ -188,6 +192,7 @@ placement = scene:extend({
 		-- a win's coins count up into the total once the result card is down
 		if card.ready and coins_shown < run.coins and t % 3 == 0 then coins_shown += 1 end
 		p_flash = max(0, p_flash - 1)
+		say_t -= 1
 		e_flash = max(0, e_flash - 1)
 	end,
 
@@ -210,9 +215,11 @@ placement = scene:extend({
 		-- freeze the charge bars: fresh tables, so the running charge tweens
 		-- keep writing into the old ones
 		bars.p_charge, bars.e_charge = {v = bars.p_charge.v}, {v = bars.e_charge.v}
-		-- the result card waits a second, then drops in from above
+		-- its line on how it went, until the result card lands: the card waits
+		-- 1.5 seconds, then drops in from above
+		say, say_t = b:won() and foe.beaten or foe.beat_you, 120
 		card = {y = -80}
-		tween.new(card):add(60):add({k = "y", v = 0, f = 30, tr = "back", ease = "out"}):play(function() card.ready = true end)
+		tween.new(card):add(90):add({k = "y", v = 0, f = 30, tr = "back", ease = "out"}):play(function() card.ready = true end)
 	end,
 
 	-- one event: snap the hp number, flash, let the trail follow, recharge
@@ -283,6 +290,7 @@ placement = scene:extend({
 		camera(sx, sy)
 		clip()
 		if stage.foe_x > -28 then drw_foe(_ENV, foe.art, stage.foe_x, 59 + lunge.y) end
+		if say_t > 0 then drw_say(_ENV) end
 
 		rect(2, 91, 94, 108, dark) -- dice bag rect
 		if #run:unused() == 0 then txt("dice bag", 48, 98, dark, "c") end
@@ -326,6 +334,21 @@ placement = scene:extend({
 	-- centred on x, y with mspr; shakes when hit. green (11) is the sheet's
 	-- background: only it is transparent while drawing, then back to the usual
 	-- black + brown (palt bitmask: colour 0 = 0x8000 ... colour 15 = 1)
+	-- speech bubble right of the big enemy art (shifted left to fit the
+	-- screen), its tail pointing down-left at the art; \n in say = new line
+	drw_say = function(_ENV)
+		local ls, w = split(say, "\n", false), 0
+		for l in all(ls) do
+			w = max(w, #l * 4)
+		end
+		local h = #ls * 6 + 3
+		local x, y = min(stage.foe_x + 14, 122 - w), 32
+		rrectfill(x, y, w + 5, h, 2, 7)
+		line(x + 3, y + h, x, y + h + 3, 7)
+		line(x + 4, y + h, x + 1, y + h + 3, 7)
+		print(say, x + 3, y + 2, 0)
+	end,
+
 	drw_foe = function(_ENV, i, x, y)
 		mspr(myspr[i], x + (e_flash > 0 and rnd(3) - 1 or 0), y)
 	end,
