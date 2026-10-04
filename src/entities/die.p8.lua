@@ -74,10 +74,7 @@ die = selectable:extend({
 	land = 9,
 	init = function(_ENV)
 		kind = kind or d6
-		faces, rigged = {}, {}
-		for f in all(kind.faces) do
-			add(faces, f)
-		end
+		faces, rigged = {unpack(kind.faces)}, {}
 		w = #faces == 3 and 18 or 16
 	end,
 	-- lowest and highest face

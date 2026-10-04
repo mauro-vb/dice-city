@@ -73,7 +73,7 @@ shop = scene:extend({
 		-- your dice: drag one onto the sell box to sell it
 		sell_box = f:item(selectable:new({
 			x = 112, y = 83, w = 31, h = 21,
-			accepts = function() return true end,
+			accepts = function(_, d) return d.class == die end,
 			on_drop = function(_, d)
 				sell(d)
 				-- [sfx 38: buy] selling too
@@ -84,17 +84,17 @@ shop = scene:extend({
 		local gap = min(17, 81 / max(1, #run.bag - 1))
 		for i = 1, #run.bag do
 			local d = run.bag[i]
-			d.pickable = true
-			d.on_press = false
+			-- drag to sell, or drop an enchantment or rig on it
+			d.pickable, d.on_press, d.accepts, d.on_drop = true, false, takes_item, drop_item
 			d:move_to(11 + (i - 1) * gap, 84)
 			f:item(d)
 		end
-		-- inventory: only beers (potions) can be used in the shop
+		-- inventory: beers, and enchantments and rigs (dropped on a die)
 		inv = inv_slots(f, 120, function(i)
 			if use_item(i) then build(_ENV) end
 		end, function(i)
 			local s = run.items[i]
-			return s and s.k == potion and can_use(i)
+			return s and (s.k == potion or s.k.col or s.k.up) and can_use(i)
 		end)
 		reroll_btn = f:item(button:new({
 			x = 104, y = 104, w = 44,
@@ -139,7 +139,7 @@ shop = scene:extend({
 		if #run.bag == 0 then print("buy a die to start", 2, 82, dark) end
 		rect(96, 72, 126, 92, dark)
 		txt("sell", 111, 76, 6, "c")
-		if f.held then txt("+"..sell_price(f.held)..cash, 111, 84, 7, "c") end
+		if f.held and f.held.kind then txt("+"..sell_price(f.held)..cash, 111, 84, 7, "c") end
 		for d in all(run.bag) do
 			if d != f.held then d:drw() end
 		end

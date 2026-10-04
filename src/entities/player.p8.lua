@@ -41,13 +41,12 @@ player = game_object:extend({
 		for k in all(stat_names) do
 			for d in all(slots[k]) do
 				add(order, d)
-				roll_die(d)
 			end
 		end
 		for d in all(unused(_ENV)) do
 			add(order, d)
-			roll_die(d)
 		end
+		foreach(order, roll_die)
 		return order
 	end,
 	unused = function(_ENV)

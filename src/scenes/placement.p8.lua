@@ -75,11 +75,8 @@ placement = scene:extend({
 		-- inventory: potions any time, bombs mid-fight. aim items (reroll, rig,
 		-- double, enchantments) are carried to a die and used on it when dropped
 		use_on = function(d, s)
-			-- focus:drop left the slot where it was dropped: back in its row
-			-- (inv_slots' spacing)
-			s.x, s.y = 58 + s.i * 11, 121
 			-- a double adds a die: it joins the focus list too
-			local k = use_item(s.i, false, d)
+			local k = drop_item(d, s)
 			if k == double then f:item(run.bag[#run.bag]) end
 			if k == token then
 				d:roll_anim(0)
@@ -182,11 +179,7 @@ placement = scene:extend({
 		for d in all(run.bag) do
 			-- a wild die can still move once you've seen the rolls
 			d.pickable = phase == "place" or phase == "rolled" and d.ench == wild
-			d.accepts, d.on_drop = function(_, s) return s.class == item_slot end, use_on
-		end
-		for s in all(inv) do
-			local it = run.items[s.i]
-			s.pickable = it and it.k.aim
+			d.accepts, d.on_drop = takes_item, use_on
 		end
 		act_btn.label = phase == "place" and "roll" or phase == "done" and "next" or phase == "fight" and (fast and "x3" or ">>") or "fight"
 		f:upd()
@@ -211,9 +204,7 @@ placement = scene:extend({
 		end
 		-- a win's coins count up into the total once the result card is down
 		if card.ready and coins_shown < run.coins and t % 3 == 0 then coins_shown += 1 end
-		p_flash = max(0, p_flash - 1)
-		say_t -= 1
-		e_flash = max(0, e_flash - 1)
+		p_flash, e_flash, say_t = max(0, p_flash - 1), max(0, e_flash - 1), say_t - 1
 	end,
 
 	-- steps the battle one tick every 10 frames

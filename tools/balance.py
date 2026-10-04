@@ -58,7 +58,7 @@ LVL = {"lvl up": 1, "lvl up+": 2}
 ITEMS.update({"lvl up": 6, "lvl up+": 9})
 # rigs: + this much to a random face of a die, for good
 RIG = {"rig": 1, "rig+": 2, "rig++": 3}
-ITEMS.update({"rig": 3, "rig+": 4, "rig++": 6})
+ITEMS.update({"rig": 2, "rig+": 3, "rig++": 4})
 # the regular item pool in tier order (gen_offers / pick): the first 6 at
 # first, 8 from idx 2, all 9 from idx 3. enchantments: one per shop, last
 ITEM_TIERS = ["potion", "bomb", "reroll", "double", "rig", "lvl up", "rig+", "lvl up+", "rig++"]
