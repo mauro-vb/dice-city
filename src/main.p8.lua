@@ -17,9 +17,17 @@ function stop_music()
     want, playing = nil
 end
 
+-- pause menu item 1: music off / on. off stops the song and keeps what's
+-- wanted, so on brings back the right segment
+function toggle_music()
+    muted, playing = not muted
+    music(-1)
+    menuitem(1, muted and "music on" or "music off", toggle_music)
+end
+
 function music_upd()
     local pat = stat(54)
-    if want != playing then
+    if want != playing and not muted then
         -- done: the playing pattern just ended (the next one started)
         if not segs[playing] or pat != ppat then
             music(segs[want][1])
@@ -33,6 +41,7 @@ function _init()
     color_settings()
     music(0)
     want, playing = "menu", "menu"
+    menuitem(1, "music off", toggle_music)
     -- start at black: the title switches in on the first frame, then fades in
     scene:load(title)
     fade_t = 14
