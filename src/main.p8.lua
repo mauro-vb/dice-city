@@ -11,6 +11,12 @@ segs = {menu = {0, 2}, fight1 = {8, 13}}
 -- finished, so the change lands on the beat
 function want_music(name) want = name end
 
+-- silence until the next want_music (nothing is wanted or playing)
+function stop_music()
+    music(-1)
+    want, playing = nil
+end
+
 function music_upd()
     local pat = stat(54)
     if want != playing then

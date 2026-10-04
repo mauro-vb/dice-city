@@ -3,7 +3,7 @@
 
 
 placement = scene:extend({
-	-- >> during the fight: 3x speed (kept for the next fights)
+	-- >> during the fight: 3x speed (resets each fight)
 	fast = false,
 	init = function(_ENV)
 		global.parts = {}
@@ -123,6 +123,7 @@ placement = scene:extend({
 		tw(stage, {{f = 16, e = qio, hx = 17}})
 		tw(stage, {{f = 24, e = bout, foe_x = 64}}, function()
 			phase = "fight"
+			fast = false
 			-- arrived: its walk-in line
 			say, say_t = foe.walk_in, 150
 			charge_next(_ENV, "p")
@@ -229,7 +230,10 @@ placement = scene:extend({
 		phase = "done"
 		gain, next_scene = finish_fight(b)
 		-- [sfx 37: defeat] the fight is lost
-		if not b:won() then sfx(37) end
+		if not b:won() then
+			global.stop_music()
+			sfx(37)
+		end
 		-- freeze the charge bars: fresh tables, so the running charge tweens
 		-- keep writing into the old ones
 		bars.p_charge, bars.e_charge = {v = bars.p_charge.v}, {v = bars.e_charge.v}

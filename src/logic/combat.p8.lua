@@ -5,6 +5,7 @@
 -- def blocks up to its value, but a hit always does at least 1, so every
 -- fight plays out to the end. no randomness: dice are rolled before
 -- never changes the player or the enemy def; finish_fight applies the result
+god_mode = true-- debug: one-shot enemies, take no damage. set false to disable
 battle = class:extend({
 	-- stats and the bag's coins are taken now: after this, placement doesn't matter
 	init = function(_ENV)
@@ -18,6 +19,7 @@ battle = class:extend({
 		p_rate, e_rate = stats.spd + 5, foe.spd + 5
 		p_dmg = max(1, stats.atk - foe.def)
 		e_dmg = max(1, foe.atk - stats.def)
+		if god_mode then p_dmg, e_dmg = 9999, 0 end
 	end,
 	over = function(_ENV)
 		return p_hp <= 0 or e_hp <= 0 or tick >= 1000
