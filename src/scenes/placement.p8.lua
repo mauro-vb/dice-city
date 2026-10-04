@@ -92,6 +92,7 @@ placement = scene:extend({
 		-- leave, so they can't be hovered any more
 		b = battle:new({p = run, foe = foe})
 		for d in all(run.bag) do
+			if d.slot and d.kind.perk == "grow" then grow(d) end
 			run:unplace(d)
 			-- a double's copy counted for the stats; it doesn't stay
 			if d.temp then

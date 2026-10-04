@@ -44,3 +44,11 @@ test("every fight stage has a named enemy, the last is the boss", function()
 		check(not stages[i].boss == (i < #stages), "boss only last")
 	end
 end)
+
+test("grower: the lowest face grows, faces stay in order", function()
+	local g = die:new({kind = dgw})
+	grow(g)
+	check(g.faces[1] == 2 and g.faces[2] == 2, "1 -> 2")
+	grow(g)
+	check(g.faces[1] == 2 and g.faces[2] == 3 and g.faces[3] == 3, "then 2;3;3")
+end)

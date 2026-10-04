@@ -31,3 +31,15 @@ function next_stage()
 		d:clear()
 	end
 end
+
+-- a grower going into a fight raises its lowest face: the last one of that
+-- value, so the faces stay in order (1;2;3 -> 2;2;3 -> 2;3;3). this fight
+-- is already rolled, and losing ends the run, so it's the same as growing
+-- after a win
+function grow(d)
+	local lo, j = d:range()
+	for i = 1, #d.faces do
+		if d.faces[i] == lo then j = i end
+	end
+	d.faces[j] += 1
+end
