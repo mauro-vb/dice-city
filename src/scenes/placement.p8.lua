@@ -16,6 +16,9 @@ placement = scene:extend({
 		lunge = {y = 0}
 		-- speech bubble by the enemy art: say = the line, say_t = frames left
 		say, say_t = false, 0
+		-- the stage's story screen first: story = its text until a click, story_t
+		-- = frames shown (the boxes appear one by one)
+		story, story_t = cur_stage().story, 0
 		-- roll animation: roll_t counts frames since the roll; fight waits for roll_end
 		roll_t, roll_end, global.shake = 0, 0, 0
 		p_shown, e_shown, p_flash, e_flash = run.hp, foe.hp, 0, 0
@@ -172,7 +175,11 @@ placement = scene:extend({
 	end,
 
 	upd = function(_ENV)
-
+		if story then
+			story_t += 1
+			if mb > pmb then story = false end
+			return
+		end
 		for d in all(run.bag) do
 			-- a wild die can still move once you've seen the rolls
 			d.pickable = (phase == "place" or phase == "rolled" and d.ench == wild) and not aim
@@ -255,6 +262,7 @@ placement = scene:extend({
 
 	drw = function(_ENV)
 		cls(bg)
+		if story then return drw_story(_ENV) end
 		-- landing shake: the whole screen but the pointer and the result card
 		local sx, sy = 0, 0
 		if shake > 0 then sx, sy = rnd(3) - 1, rnd(3) - 1 end
@@ -334,6 +342,25 @@ placement = scene:extend({
 	-- centred on x, y with mspr; shakes when hit. green (11) is the sheet's
 	-- background: only it is transparent while drawing, then back to the usual
 	-- black + brown (palt bitmask: colour 0 = 0x8000 ... colour 15 = 1)
+	-- story screen: comic caption boxes on black, one every 30 frames, each a
+	-- bit further right and down: yellow, black inner border, grey drop shadow
+	drw_story = function(_ENV)
+		local bs = split(story, "/", false)
+		for i = 1, min(#bs, story_t \ 30 + 1) do
+			local ls, w = split(bs[i], "\n", false), 0
+			for l in all(ls) do
+				w = max(w, #l * 4)
+			end
+			local x, y, h = 6 + (i - 1) * 18, 10 + (i - 1) * 40, #ls * 6 + 7
+			rectfill(x + 2, y + 2, x + w + 9, y + h + 1, dark)
+			rectfill(x, y, x + w + 7, y + h - 1, 10)
+			rect(x + 1, y + 1, x + w + 6, y + h - 2, 0)
+			print(bs[i], x + 4, y + 4, 0)
+		end
+		txt("cLICK TO GO ON", 64, 118, dark, "c")
+		mspr(myspr[15], stat(32), stat(33))
+	end,
+
 	-- speech bubble right of the big enemy art (shifted left to fit the
 	-- screen), its tail pointing down-left at the art; \n in say = new line
 	drw_say = function(_ENV)

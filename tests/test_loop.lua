@@ -10,9 +10,12 @@ local function wait_roll()
 	step(placement.roll_end - placement.roll_t + 1)
 end
 
+-- a click that loads a scene starts a fade (src/main: the new scene switches
+-- in at fade_t 15, idle at 30): wait it out
 local function click(it)
 	mouse(it.x, it.y, 1) step()
 	mouse(it.x, it.y, 0) step()
+	while fade_t < 30 do step() end
 end
 
 local function drag(it, to)
@@ -36,6 +39,10 @@ local function leave_shop(buy_one)
 	if buy_one then click(shop.cards[1]) end
 	click(shop.fight_btn)
 	check(scene.current == placement, "shop -> placement")
+	-- the stage's story screen: a click anywhere goes on
+	check(placement.story, "story first")
+	click({x = 64, y = 64})
+	check(not placement.story, "story gone")
 	settle()
 end
 
@@ -145,7 +152,9 @@ end)
 test("a loss ends the run", function()
 	start_run()
 	leave_shop(true)
+	-- a sure loss: no damage at all, and the enemy's first hit kills
 	run.hp = 1
+	run.base = {atk = -20, spd = 1, def = 0}
 	fight()
 	check(scene.current == game_over and not run.won, "loss -> game over")
 	step(31)
