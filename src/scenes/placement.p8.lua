@@ -323,7 +323,7 @@ placement = scene:extend({
 			local s = b.stats
 			print("atk"..s.atk.." spd"..s.spd.." def"..s.def, 2, 110, 6)
 		else
-			txt(phase == "place" and "dice in bag generate $" or "win: +"..leftover_coins(run:unused())..cash.."\f6 from the bag", 2, 110, 6)
+			txt(phase == "place" and "dice in bag = cash\fa$" or "win: +"..leftover_coins(run:unused())..cash.."\f6 from the bag", 2, 110, 6)
 		end
 		for d in all(run:unused()) do
 			if d != f.held then d:drw() end

@@ -83,8 +83,9 @@ end
 -- uses one item from stack i (d = the die for a reroll); returns its kind, or false
 function use_item(i, b, d)
 	local s = run.items[i]
-	-- a double needs a placed die and room in the bag and in its column
-	if not can_use(i, b) or s.k == double and not (d.slot and #run.bag < dice_max and #run.slots[d.slot] < 3) then return false end
+	-- a double needs a placed die and room in its column (its copy can go
+	-- past dice_max: it leaves when the fight starts)
+	if not can_use(i, b) or s.k == double and not (d.slot and #run.slots[d.slot] < 3) then return false end
 	s.n -= 1
 	if s.n == 0 then deli(run.items, i) end
 	if s.k == bomb then
@@ -92,7 +93,9 @@ function use_item(i, b, d)
 	elseif s.k == token then
 		roll_die(d)
 	elseif s.k == double then
-		-- a temporary copy in the same column (gone when the fight starts)
+		-- [sfx 45: glass shatter] a temporary copy in the same column (gone
+		-- when the fight starts)
+		sfx(45)
 		local c = run:add_die(d.kind)
 		c.faces, c.rigged, c.value, c.face_i, c.temp, c.x, c.y = {unpack(d.faces)}, d.rigged, d.value, d.face_i, true, d.x, d.y
 		run:place(c, d.slot)
