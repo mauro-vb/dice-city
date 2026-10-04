@@ -59,10 +59,10 @@ ITEMS.update({"lvl up": 6, "lvl up+": 9, "lvl up++": 12})
 # src/defs/enemies.p8.lua -- a list is a stat that rolls one of its values
 ENEMIES = {
     "tourist":    dict(hp=8, atk=2, spd=1, defn=0),
-    "pickpocket": dict(hp=16, atk=4, spd=14, defn=0),
+    "drunk": dict(hp=16, atk=4, spd=14, defn=0),
     "bouncer":    dict(hp=22, atk=6, spd=2, defn=7),
     "gambler":    dict(hp=28, atk=[4, 12], spd=6, defn=0),
-    "card sharp": dict(hp=10, atk=20, spd=8, defn=2),
+    "elder":      dict(hp=35, atk=100, spd=-3, defn=2),
     "loan shark": dict(hp=28, atk=22, spd=0, defn=3),
     "the house":  dict(hp=32, atk=list(range(11, 17)), spd=list(range(3, 9)),
                        defn=list(range(5, 11))),
@@ -74,10 +74,10 @@ ENEMIES = {
 STAGES = [
     dict(reward=0),  # 0: the opening shop, no fight
     dict(enemy="tourist", reward=2),
-    dict(enemy="pickpocket", reward=2),
+    dict(enemy="drunk", reward=2),
     dict(enemy="bouncer", reward=3),
     dict(enemy="gambler", reward=3),
-    dict(enemy="card sharp", reward=4),
+    dict(enemy="elder", reward=4),
     dict(enemy="loan shark", reward=4),
     dict(enemy="the house", boss=True),
 ]
@@ -137,8 +137,8 @@ class Run:
         best die without one), bombs and a reroll token for the late bosses,
         and rerolls the offers while it can afford to."""
         P = POLICY
-        offers = self.offers(stage)
-        reroll_cost = 1
+        offers = self.offers(idx)
+        rerolls = 0
         while True:
             if self.hp <= MAX_HP - POTION_HEAL and self.can_buy_item("potion", offers):
                 self.buy_item("potion", offers)
@@ -195,10 +195,11 @@ class Run:
             if self.items["potion"] < P["potions"] and self.can_buy_item("potion", offers, 1):
                 self.buy_item("potion", offers)
                 continue
-            if self.coins >= reroll_cost + P["keep"] and reroll_cost <= P["rerolls"]:
-                self.coins -= reroll_cost
-                reroll_cost += 1
-                offers = self.offers(stage)
+            # a shop reroll always costs 1; the bot stops after P["rerolls"]
+            if self.coins >= 1 + P["keep"] and rerolls < P["rerolls"]:
+                self.coins -= 1
+                rerolls += 1
+                offers = self.offers(idx)
                 continue
             return
 
@@ -225,9 +226,15 @@ class Run:
         self.items[k] += 1
         offers.remove(k)
 
-    def offers(self, stage):
-        n = 3 if "enemy" not in stage else self.rng.choice([1, 2])
-        return [self.rng.choice(list(DICE) if i < n else list(ITEMS)) for i in range(4)]
+    def offers(self, idx):
+        """src/logic/economy.p8.lua gen_offers: shop 1 (idx 0) 2 dice + 1
+        enchantment, shop 2 1 die + 2 items, then 1 die + 3 items. + dice from
+        idx 2, ++ from idx 3"""
+        top = 0 if idx < 2 else 1 if idx < 3 else 2
+        dice = [k for k in DICE if k.count("+") <= top]
+        n_dice, n = (2, 3) if idx == 0 else (1, 3) if idx == 1 else (1, 4)
+        items = list(ENCH) if idx == 0 else list(ITEMS)
+        return [self.rng.choice(dice if i < n_dice else items) for i in range(n)]
 
 
 def sell_price(d):

@@ -15,3 +15,4 @@ defs("id,name,price,info,inv,aim,col", "potion,beer,3,heals 5 hp,1|bomb,bomb,6,1
 -- an empty inv field would be "" (true)
 defs("id,name,price,info,lvl", "lvlup,lv up,6,+1 all base stats,1|lvlup1,lv up+,9,+2 all base stats,2|lvlup2,lv up++,12,+3 all base stats,3")
 item_kinds = names"potion,bomb,token,double,rig,greedy,grower,wild,glass,lvlup,lvlup1,lvlup2"
+ench_kinds = names"greedy,grower,wild,glass"

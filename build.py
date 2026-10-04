@@ -87,13 +87,19 @@ def write_test_carts(includes):
     don't fit in one cart. Each test("...") block gets its own
     tests/run_<file>_<n>.p8 (plus a .lua with the file's shared helpers and
     that one test). They live in tests/ so the harness's ../cart.p8 still
-    resolves. PICO-8 can't nest #includes, so the game's include list is
-    copied with paths made relative to tests/.
+    resolves. The game goes in as one comment-free file, tests/run_game.lua:
+    PICO-8 caps a cart's code at 65535 characters, comments included, and the
+    commented game plus harness and test no longer fits (error line numbers
+    then point into run_game.lua).
     """
     for old in TESTS.glob("run_*"):
         old.unlink()
     TEST_CART.unlink(missing_ok=True)
-    game = [line.replace("#include ", "#include ../", 1) for line in includes]
+    code = []
+    for inc in includes:
+        code += strip_comments((ROOT / inc.removeprefix("#include ")).read_text())
+    (TESTS / "run_game.lua").write_text("\n".join(code) + "\n")
+    game = ["#include run_game.lua"]
     count = 0
     for path in sorted(TESTS.glob("test_*.lua")):
         head, chunks = split_tests(path.read_text())

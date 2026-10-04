@@ -106,7 +106,6 @@ shop = scene:extend({
 			on_press = function()
 				if not run:spend(reroll_cost) then return end
 				offers = gen_offers()
-				reroll_cost += 1
 				build(_ENV)
 			end,
 			enabled = function() return run.coins >= reroll_cost end,
