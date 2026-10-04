@@ -17,7 +17,6 @@ __lua__
 #include src/utils/color_settings.p8.lua
 #include src/utils/cursor.p8.lua
 #include src/utils/helpers.p8.lua
-#include src/utils/input.p8.lua
 #include src/utils/ptween.p8.lua
 #include src/utils/sprite.p8.lua
 #include data/myspr.txt

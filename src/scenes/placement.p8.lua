@@ -1,7 +1,6 @@
 -- place dice, roll, then the fight plays out live on this same screen
 -- phase: place -> rolled -> intro (columns slide out, big enemy slides in) -> fight -> done
 
-frames_per_tick = 10
 
 placement = scene:extend({
 	init = function(_ENV)
@@ -18,7 +17,7 @@ placement = scene:extend({
 		-- roll animation: roll_t counts frames since the roll; fight waits for roll_end
 		roll_t, roll_end, global.shake = 0, 0, 0
 		p_shown, e_shown, p_flash, e_flash = run.hp, foe.hp, 0, 0
-		ev_i, frames = 0, 0
+		frames = 0
 		b = false
 		coins_shown = run.coins
 		f = focus:new()
@@ -116,7 +115,7 @@ placement = scene:extend({
 		local c = {v = 0}
 		bars[who.."_charge"] = c
 		if b:over() then return end
-		tween.new(c):add({k = "v", v = 1, f = b:ticks_to(who) * frames_per_tick}):play()
+		tween.new(c):add({k = "v", v = 1, f = b:ticks_to(who) * 10}):play()
 	end,
 
 	-- use the item in slot i: a bomb hits the enemy like an attack would,
@@ -162,14 +161,7 @@ placement = scene:extend({
 		-- would overwrite the shop's dice targets
 		if scene.current != placement then return end
 		layout(_ENV)
-		-- ❎ skips the roll: every die lands next frame, totals show at once
 		roll_t += 1
-		if btnp(5) and roll_t < roll_end then
-			for d in all(run.bag) do
-				if d.air > 0 then d.air = 1 end
-			end
-			roll_t = roll_end
-		end
 		global.shake = max(0, shake - 1)
 		upd_group(run.bag)
 		upd_group(parts)
@@ -180,11 +172,11 @@ placement = scene:extend({
 		e_flash = max(0, e_flash - 1)
 	end,
 
-	-- steps the battle one tick every frames_per_tick frames
+	-- steps the battle one tick every 10 frames
 	upd_fight = function(_ENV)
 		if b:over() then return end_fight(_ENV) end
 		frames += 1
-		if frames < frames_per_tick then return end
+		if frames < 10 then return end
 		frames = 0
 		for ev in all(b:step()) do
 			hit(_ENV, ev)
@@ -204,7 +196,6 @@ placement = scene:extend({
 
 	-- one event: snap the hp number, flash, let the trail follow, recharge
 	hit = function(_ENV, ev)
-		ev_i += 1
 		local target = ev.who == "p" and "e" or "p"
 		-- hit-stop: the next tick waits longer the harder the hit
 		frames = -2 - ev.dmg \ 3

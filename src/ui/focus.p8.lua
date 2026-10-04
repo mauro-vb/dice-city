@@ -1,68 +1,39 @@
--- one per scene: hover, press, pick up and drop selectables
--- mouse: hover, click, drag (or click to pick up, click again to drop)
--- keys: arrows move to the nearest item that way, x picks/drops/presses, o cancels
+-- one per scene: hover, press, pick up and drop selectables, mouse only
+-- (click, drag, or click to pick up and click again to drop)
 --
 -- usage:
 --   f = focus:new()
 --   f:item(button:new({...}))   -- later items sit on top of earlier ones
 --   f:upd()  f:drw()            -- f.cur is the hovered item, f.held the carried one
+-- cur, held, dragging and last start nil (no globals have these names)
 
 focus = class:extend({
 	init = function(_ENV)
-		-- mx, my start off-screen: the first frame counts as a mouse move, so
-		-- the pointer shows right after a click that changed the scene.
+		-- mx, my: the pointer, off-screen until the first upd (a scene's first
+		-- drw can come before it, right after the click that loaded it).
 		-- hover_t: frames the same item has been hovered (tooltips wait for it)
-		items, cur, held, mouse_on, mx, my, hover_t, last = {}, false, false, false, -1, -1, 0, false
-		-- global, written by the tooltip (a field here would hide it)
-		global.tip_area = false
+		items, mx, my, hover_t = {}, -1, -1, 0
 	end,
 
 	item = function(_ENV, it)
 		add(items, it)
-		if not cur and usable(_ENV, it) then cur = it end
 		return it
 	end,
 
-	-- can keys land here / can a click do something
+	-- can a click do something here / can the held item be dropped here
 	usable = function(_ENV, it)
 		if held then return it.accepts and it:accepts(held) end
 		return it.pickable or it.on_press
 	end,
 
-	-- topmost item under the point; while holding, only drop targets
-	-- over an open tooltip nothing behind it gets hovered: cur stays
-	under = function(_ENV, px, py)
-		local a = tip_area
-		if a and px >= a[1] and px <= a[3] and py >= a[2] and py <= a[4] then return cur end
+	-- topmost item under the pointer; while holding, only drop targets
+	under = function(_ENV)
 		for i = #items, 1, -1 do
 			local it = items[i]
-			if it != held and it:contains(px, py) and (not held or usable(_ENV, it)) then
+			if it != held and it:contains(mx, my) and (not held or usable(_ENV, it)) then
 				return it
 			end
 		end
-		return false
-	end,
-
-	-- nearest usable item that way; prefers items inside a 45° cone
-	move = function(_ENV, dx, dy)
-		local best, best_s = false, 32767
-		for it in all(items) do
-			if it != cur and it != held and usable(_ENV, it) then
-				if not cur then
-					cur = it
-					return
-				end
-				local ox, oy = it.x - cur.x, it.y - cur.y
-				local main = ox * dx + oy * dy
-				local cross = abs(ox * dy) + abs(oy * dx)
-				local s = main + 2 * cross
-				if main < cross then s += 1000 end
-				if main > 0 and s < best_s then
-					best, best_s = it, s
-				end
-			end
-		end
-		if best then cur = best end
 	end,
 
 	press = function(_ENV)
@@ -74,69 +45,35 @@ focus = class:extend({
 		end
 	end,
 
-	-- where the carried item is drawn: at the mouse, or above cur for keys
-	held_pos = function(_ENV)
-		if mouse_on then return mx, my end
-		if cur then return cur.x, cur.y - 10 end
-		return held.x, held.y
-	end,
-
 	-- drop on cur if it takes the held item; true if dropped
-	-- the item starts from where it was drawn, so it can glide into place
+	-- the item starts from the pointer, so it can glide into place
 	drop = function(_ENV)
 		if not (cur and cur.accepts and cur:accepts(held)) then return false end
-		held.x, held.y = held_pos(_ENV)
+		held.x, held.y = mx, my
 		cur:on_drop(held)
 		held = false
 		return true
 	end,
 
+	-- every frame, not only when the mouse moves: items glide under a still mouse
 	upd = function(_ENV)
-		local x_hit, o_hit = pressed(5), pressed(4)
-		if cursor.x != mx or cursor.y != my then
-			mx, my = cursor.x, cursor.y
-			mouse_on = true
-		end
-		-- every frame, not only when the mouse moves: items glide under a still mouse
-		if mouse_on then cur = under(_ENV, mx, my) end
-		upd_mouse(_ENV)
-		upd_keys(_ENV, x_hit, o_hit)
-		hover_t = cur == last and hover_t + 1 or 0
-		last = cur
-	end,
-
-	upd_mouse = function(_ENV)
-		if cursor:just_pressed() then
-			mouse_on = true
-			cur = under(_ENV, mx, my)
+		mx, my = stat(32), stat(33)
+		cur = under(_ENV)
+		-- mb / pmb: left button now / last frame (src/utils/cursor)
+		if mb > pmb then
 			if held then
 				if not drop(_ENV) then held = false end
-				return
+			else
+				press(_ENV)
+				dragging = held
 			end
-			press(_ENV)
-			dragging = held
-			return
+		elseif mb < pmb and dragging then
+			dragging = false
+			-- released where it was picked up: keep carrying until the next click
+			if not drop(_ENV) and not held:contains(mx, my) then held = false end
 		end
-		if not (cursor:is_released() and dragging) then return end
-		dragging = false
-		cur = under(_ENV, mx, my)
-		if drop(_ENV) then return end
-		-- released where it was picked up: keep carrying until the next click
-		if not held:contains(mx, my) then held = false end
-	end,
-
-	upd_keys = function(_ENV, x_hit, o_hit)
-		for b = 0, 3 do
-			if btnp(b) then
-				mouse_on = false
-				-- left, right, up, down
-				move(_ENV, split"-1,1,0,0"[b + 1], split"0,0,-1,1"[b + 1])
-			end
-		end
-		if x_hit then
-			if held then drop(_ENV) else press(_ENV) end
-		end
-		if o_hit then held = false end
+		hover_t = cur == last and hover_t + 1 or 0
+		last = cur
 	end,
 
 	-- the hover frame: draw it before cards (tooltip, result box) so they cover it
@@ -153,12 +90,12 @@ focus = class:extend({
 	drw = function(_ENV)
 		if held then
 			local ox, oy = held.x, held.y
-			held.x, held.y = held_pos(_ENV)
+			held.x, held.y = mx, my
 			held:drw()
 			held.x, held.y = ox, oy
 		end
 		-- pointer: myspr region 15, or 16 while carrying a die or the button is
 		-- down; each region's offset puts its tip on the mouse
-		if mouse_on then mspr(myspr[(held or stat(34) > 0) and 16 or 15], mx, my) end
+		mspr(myspr[(held or mb > 0) and 16 or 15], mx, my)
 	end,
 })

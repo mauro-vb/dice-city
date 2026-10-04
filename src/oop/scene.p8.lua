@@ -12,11 +12,9 @@
 --   scene.current:drw()         -- call every frame, in _draw()
 
 scene = game_object:extend({
-    -- switch to new scene if different from current
+    -- switch to new scene (no scene ever loads itself)
     load = function(_ENV, new_scene)
-        if new_scene != current then
-            current = new_scene
-            current:init()
-        end
+        current = new_scene
+        current:init()
     end
 })

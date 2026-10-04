@@ -9,10 +9,6 @@ function split2d(s)
     return arr
 end
 
-function rndrange(low, high)
-	return low + rnd(high - low)
-end
-
 -- calls :upd() on every item in group -- entities, particles, anything game_object-based
 function upd_group(group)
     for e in all(group) do

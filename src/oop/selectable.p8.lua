@@ -1,5 +1,8 @@
 -- something focus can hover, press, pick up or drop onto
--- x, y is the centre; enabled can be a function
+-- x, y is the centre (w, h are always given); enabled can be a function.
+-- optional, read only as true / false, so left nil (no globals have these
+-- names): pickable, on_press, accepts, on_drop (only called after accepts),
+-- shows (what a shop card or item slot stands for, for the hover tooltip)
 --
 -- usage:
 --   b = selectable:new({x = 64, y = 64, w = 20, h = 10, on_press = function() ... end})
@@ -9,15 +12,7 @@
 selectable = game_object:extend({
 	x = 0,
 	y = 0,
-	w = 8,
-	h = 8,
 	enabled = true,
-	pickable = false,
-	on_press = false,
-	accepts = false,
-	on_drop = _noop,
-	-- a die this item stands for (shop cards), for the hover tooltip
-	shows = false,
 	contains = function(_ENV, px, py)
 		return abs(px - x) * 2 <= w and abs(py - y) * 2 <= h
 	end,

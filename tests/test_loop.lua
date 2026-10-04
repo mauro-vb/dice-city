@@ -1,18 +1,13 @@
--- drives the screens like a player: mouse clicks and drags, plus one keys-only test
+-- drives the screens like a player: mouse clicks and drags (the game is mouse only)
 -- dice glide with 8-frame tweens, so wait (settle) before clicking or dragging them
-
-local function press(b)
-	hold(b) step() release(b) step()
-end
 
 local function settle()
 	step(10)
 end
 
--- ❎ skips the roll animation (fight stays locked until it's over)
-local function skip()
-	press(5)
-	settle()
+-- wait out the roll animation (fight stays locked until it's over)
+local function wait_roll()
+	step(placement.roll_end - placement.roll_t + 1)
 end
 
 local function click(it)
@@ -49,7 +44,7 @@ local function start_fight()
 	local d = run.bag[1]
 	if not d.slot then drag(d, placement.cols.atk) end
 	click(placement.act_btn)
-	skip()
+	wait_roll()
 	click(placement.act_btn)
 	return d
 end
@@ -104,29 +99,6 @@ test("drag between slots and back to the bag", function()
 	check(not d.slot, "back in the bag")
 	drag(d, {x = 64, y = 6})
 	check(not d.slot and not placement.f.held, "dropped on nothing: cancelled")
-end)
-
-test("keys only: pick up, move, drop, glide", function()
-	boot()
-	step(2)
-	press(5) -- start
-	press(5) -- buy the first offer
-	press(3) -- down to the first inventory slot
-	press(1) press(1) -- along the slots
-	press(1) -- right to fight
-	press(5)
-	check(scene.current == placement, "keys -> placement")
-	settle()
-	local d = run.bag[1]
-	check(placement.f.cur == d, "cursor starts on the die")
-	press(5) -- pick up
-	check(placement.f.held == d)
-	press(2) -- up to the atk column
-	press(5) -- drop
-	check(d.slot == "atk", "dropped on atk")
-	check(d.y != 75, "still gliding")
-	settle()
-	check(d.x == placement.cols.atk.x and d.y == 75, "glided into the column")
 end)
 
 test("opening shop -> stage 1 -> shop -> stage 2", function()
@@ -204,7 +176,7 @@ test("drink a potion mid-fight by clicking its slot", function()
 	run.base = {atk = 0, spd = 1, def = 50}
 	drag(run.bag[1], placement.cols.atk)
 	click(placement.act_btn)
-	skip()
+	wait_roll()
 	click(placement.act_btn)
 	for _ = 1, 100 do
 		if placement.phase == "fight" then break end
@@ -237,7 +209,7 @@ test("double: press it, then a placed die; the copy is gone when the fight start
 	check(#run.slots.atk == 2 and run.bag[2].temp, "copy in the column")
 	settle()
 	snap("double")
-	skip()
+	wait_roll()
 	click(placement.act_btn)
 	check(#run.bag == 1 and placement.b.stats.atk == 1 + d.value * 2, "copy counted, then removed")
 end)
@@ -252,7 +224,7 @@ test("glass: enchant a placed die, it breaks when the fight starts", function()
 	click(d)
 	check(d.ench == glass and #run.items == 0, "enchanted")
 	click(placement.act_btn)
-	skip()
+	wait_roll()
 	d.broke = true
 	click(placement.act_btn)
 	check(#run.bag == 0 and placement.b.stats.atk == 1 + d.value, "counted, then broke")

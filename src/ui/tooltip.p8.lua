@@ -1,15 +1,16 @@
 -- floating box next to the hovered thing: dice show their faces as mini dice and
 -- value bars (the rolled face is white), items show their effect
--- beside the item (flips near the edge), or below it for shop cards
+-- beside the item (flips near the edge), below it for shop cards, above it
+-- for things low on the screen (bag row, inventory) so the pointer doesn't
+-- cover it. it disappears once the pointer leaves the item
 
 -- frame of size w x h placed for item it; returns its top-left corner
-function tip_box(it, w, h, below, c)
+function tip_box(it, w, h, below)
 	local x, y = it.x + it.w / 2 + 3, it.y - it.h / 2
 	if x + w > 128 then x = it.x - it.w / 2 - 3 - w end
 	if below then x, y = it.x - w / 2, it.y + it.h / 2 + 2 end
+	if it.y > 80 then x, y = it.x - w / 2, it.y - it.h / 2 - 2 - h end
 	x, y = mid(0, x, 128 - w), mid(0, y, 128 - h)
-	-- focus won't hover through it (see focus.under)
-	tip_area = {x, y, x + w - 1, y + h - 1}
 	rectfill(x, y, x + w - 1, y + h - 1, bg)
 	rect(x, y, x + w - 1, y + h - 1, 6)
 	return x, y
@@ -50,7 +51,6 @@ end
 -- tip for whatever focus hovers: a die, or a shop card (die or item, tip below)
 -- only after half a second on the same item
 function hover_tip(f)
-	tip_area = false
 	local it = f.cur
 	if f.held or not it or f.hover_t < 30 then return end
 	local s = it.shows
@@ -58,5 +58,5 @@ function hover_tip(f)
 		if s.faces then return die_tip(it, s, true) end
 		return item_tip(it, s)
 	end
-	if it:is(die) then die_tip(it, it) end
+	if it.faces then die_tip(it, it) end
 end

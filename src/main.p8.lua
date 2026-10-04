@@ -10,12 +10,11 @@ end
 
 function _update60()
 	t += 1
-    cursor:upd()
+    pmb, mb = mb, stat(34) & 1
     tween.upd()
     scene.current:upd()
 end
 
 function _draw()
     scene.current:drw()
-    -- circfill(cursor.x, cursor.y, 2) -- draw a mouse cursor here if your game uses one
 end

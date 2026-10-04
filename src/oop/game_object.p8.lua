@@ -10,8 +10,6 @@
 --   -- or drive many at once: upd_group(group) / drw_group(group), see src/helpers.p8.lua
 
 game_object = class:extend({
-    init = _noop,
     upd = _noop,
     drw = _noop,
-    destroy = _noop,
 })
