@@ -9,7 +9,7 @@
 --   grower  placed in a fight, its lowest face goes up 1 for good
 --   wild    the one die you can still move after the roll
 --   glass   rolls double; 1 in 4 breaks when the fight starts
-defs("id,name,price,info,inv,aim,col", "potion,beer,3,heals 5 hp,1|bomb,bomb,6,10 damage (in a fight),1|token,reroll,3,reroll a die you rolled,1,rolled|double,double,4,copy a placed die (1 fight),1,place rolled|greedy,\fagreedy,4,unused: pays 2x roll,1,place,10|grower,\fbgrower,4,placed: low face +1,1,place,11|wild,\fewild,4,move it after the roll,1,place,14|glass,\fcglass,3,2x roll (1/4 breaks),1,place,12")
+defs("id,name,price,info,inv,aim,col", "potion,beer,3,heals 10 hp,1|bomb,bomb,6,10 damage (in a fight),1|token,reroll,1,reroll a die you rolled,1,rolled|double,double,4,copy a placed die (1 fight),1,place rolled|greedy,\fagreedy,3,unused: pays 2x roll,1,place,10|grower,\fbgrower,3,placed: low face +1,1,place,11|wild,\fewild,3,move it after the roll,1,place,14|glass,\fcglass,3,2x roll (1/4 breaks),1,place,12")
 -- up = a bonus by tier (+, ++ like the dice): rigs go in the inventory and
 -- add up to a random face of the die they're dropped on; level ups apply
 -- when bought and add up to every base stat ("lv": "lvl up+" is too wide for

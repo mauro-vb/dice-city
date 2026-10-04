@@ -49,8 +49,8 @@ for _name, _top, _price in (("d3", 3, 1), ("d6", 6, 4), ("d8", 8, 6)):
 # enchantments (ENCH) go on a die (d["ench"], one per die): greedy = unused
 # pays 2x, grower = placed: lowest face +1 for good, wild = moved after the
 # roll, glass = rolls 2x and breaks 1 in 4 when the fight starts
-ITEMS = {"potion": 3, "bomb": 6, "reroll": 3, "double": 4,
-         "greedy": 4, "grower": 4, "wild": 4, "glass": 3}
+ITEMS = {"potion": 3, "bomb": 6, "reroll": 1, "double": 4,
+         "greedy": 3, "grower": 3, "wild": 3, "glass": 3}
 ENCH = ("greedy", "grower", "wild", "glass")
 # level ups: bought = every base stat + n for the rest of the run (never in
 # the inventory)
@@ -66,9 +66,9 @@ ITEM_TIERS = ["potion", "bomb", "reroll", "double", "rig", "lvl up", "rig+", "lv
 # src/defs/enemies.p8.lua -- a list is a stat that rolls one of its values
 ENEMIES = {
     "tourist":    dict(hp=8, atk=2, spd=1, defn=1),
-    "drunk": dict(hp=16, atk=4, spd=14, defn=1),
-    "bouncer":    dict(hp=22, atk=6, spd=2, defn=7),
-    "gambler":    dict(hp=28, atk=[4, 12], spd=6, defn=1),
+    "drunk": dict(hp=16, atk=3, spd=10, defn=1),
+    "bouncer":    dict(hp=22, atk=5, spd=2, defn=7),
+    "gambler":    dict(hp=28, atk=[4, 12], spd=5, defn=1),
     "slot machine":      dict(hp=35, atk=100, spd=-3, defn=2),
     "loan shark": dict(hp=28, atk=22, spd=0, defn=3),
     "the house":  dict(hp=32, atk=list(range(11, 17)), spd=list(range(3, 9)),
@@ -101,7 +101,7 @@ POLICY = dict(lam=0.25, upgrade=0.5, late=2, bombs=2, potions=2, rerolls=3, keep
 
 # src/entities/player.p8.lua, src/logic/economy.p8.lua
 MAX_HP, START_COINS, BASE = 40, 10, dict(atk=1, spd=1, defn=0)
-POTION_HEAL, BOMB_DMG, INV_SIZE, STACK_MAX = 5, 10, 3, 5
+POTION_HEAL, BOMB_DMG, INV_SIZE, STACK_MAX = 10, 10, 3, 5
 STATS = ("atk", "spd", "defn")
 BAG = 3  # placement destination index for "unused": its value becomes coins
 BAG_MAX = 5  # most dice you can own (src/logic/economy.p8.lua dice_max)

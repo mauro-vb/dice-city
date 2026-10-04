@@ -59,7 +59,7 @@ end
 
 -- inventory: inv_size slots, each a stack {k = item, n = count} of one kind
 -- (up to stack_max). b = the battle when used mid-fight, else false.
--- potion: heals 5 when hurt (the fight's hp in a fight). bomb: 10 damage to
+-- potion: heals 10 when hurt (the fight's hp in a fight). bomb: 10 damage to
 -- the enemy, ignoring def, only in a fight. token: rerolls die d (scenes
 -- decide when: after rolling). double: a temporary copy of placed die d.
 -- rig: +up to a random face of die d, for good (d.rigged = up on that face).
@@ -103,9 +103,9 @@ function use_item(i, b, d)
 	elseif s.k.col then
 		d.ench = s.k
 	elseif b then
-		b:heal(5)
+		b:heal(10)
 	else
-		run.hp = min(run.max_hp, run.hp + 5)
+		run.hp = min(run.max_hp, run.hp + 10)
 	end
 	return s.k
 end

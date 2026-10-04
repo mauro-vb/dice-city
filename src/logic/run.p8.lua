@@ -12,16 +12,13 @@ end
 -- applies a finished battle; returns the coins gained and the next scene
 function finish_fight(b)
 	local st = cur_stage()
-	local gain = {reward = 0, leftover = 0}
 	run.hp = b.p_hp
 	if not b:won() or st.boss then
 		run.won = b:won()
-		return gain, game_over
+		return {reward = 0, leftover = 0}, game_over
 	end
-	gain.reward = st.reward
-	gain.leftover = b.coins
-	run.coins += gain.reward + gain.leftover
-	return gain, shop
+	run.coins += st.reward + b.coins
+	return {reward = st.reward, leftover = b.coins}, shop
 end
 
 -- dice are back in the bag since the fight started; clear their values

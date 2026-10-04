@@ -20,10 +20,10 @@ card = selectable:extend({
 -- item k's icon centred on x, y at scale s: 1 on a shop card, .5 in an
 -- inventory slot (src/ui/item_slot.p8.lua). double: two overlapping filled
 -- dice; reroll, rig, level up: a filled die with a label; beer (potion):
--- myspr region 17; an enchantment: a circle in its colour. bomb: no icon yet
+-- myspr region 17; bomb: region 18; an enchantment: a circle in its colour
 function item_icon(k, x, y, s)
-	if k == potion then
-		local m = myspr[17]
+	if k == potion or k == bomb then
+		local m = myspr[k == bomb and 18 or 17]
 		sspr(m[1], m[2], m[3], m[4], x - m[5] * s, y - m[6] * s, m[3] * s, m[4] * s)
 	elseif k == double then
 		rrectfill(x - 7 * s, y - 7 * s, 11 * s, 11 * s, 2 * s, 6)

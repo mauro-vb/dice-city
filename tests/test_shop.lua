@@ -44,7 +44,7 @@ test("same items stack in one slot, up to stack_max", function()
 	check(run.hp == run.max_hp, "buying doesn't heal")
 end)
 
-test("potion: heals 5 when hurt, one from the stack", function()
+test("potion: heals 10 when hurt, one from the stack", function()
 	fresh()
 	buy(potion)
 	buy(potion)
@@ -53,7 +53,7 @@ test("potion: heals 5 when hurt, one from the stack", function()
 	check(use_item(1) == potion and run.hp == run.max_hp and run.items[1].n == 1, "capped at max hp")
 	run.hp = 10
 	use_item(1)
-	check(run.hp == 15 and #run.items == 0, "last one frees the slot")
+	check(run.hp == 20 and #run.items == 0, "last one frees the slot")
 end)
 
 test("potion mid-fight heals the battle, not the run", function()
@@ -61,7 +61,7 @@ test("potion mid-fight heals the battle, not the run", function()
 	buy(potion)
 	run.hp = 10
 	local b = battle:new({p = run, foe = enemy1})
-	check(use_item(1, b) == potion and b.p_hp == 15 and run.hp == 10)
+	check(use_item(1, b) == potion and b.p_hp == 20 and run.hp == 10)
 end)
 
 test("bomb: 10 damage ignoring def, only in a fight", function()

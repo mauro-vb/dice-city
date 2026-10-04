@@ -94,7 +94,7 @@ die = selectable:extend({
 		for f in all(faces) do
 			sum += f
 		end
-		return tostr(flr(sum / #faces * 10) / 10)
+		return flr(sum / #faces * 10) / 10
 	end,
 	clear = function(_ENV)
 		value = false
