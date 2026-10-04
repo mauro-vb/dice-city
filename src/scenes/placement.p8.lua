@@ -232,7 +232,11 @@ placement = scene:extend({
 		-- 1.5 seconds, then drops in from above
 		say, say_t = b:won() and foe.beaten or foe.beat_you, 120
 		card = {y = -80}
-		tw(card, {{f = 90}, {f = 30, e = bout, y = 0}}, function() card.ready = true end)
+		-- [sfx 49: victory] once a won fight's card has landed
+		tw(card, {{f = 90}, {f = 30, e = bout, y = 0}}, function()
+			card.ready = true
+			if b:won() then sfx(49) end
+		end)
 	end,
 
 	-- one event: snap the hp number, flash, let the trail follow, recharge
