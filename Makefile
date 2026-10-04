@@ -41,6 +41,7 @@ test:
 # compressed code limit
 flat:
 	python3 build.py --flat --name "$(PROJECT_NAME)" --author "$(AUTHOR)"
+	cp splash.p8 build/
 
 # standalone sprite-region editor -- edits/exports data/myspr.txt, previewing
 # sprites live from cart.p8's spritesheet (see spritedit_tool.p8's header)

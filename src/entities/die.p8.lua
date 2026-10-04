@@ -8,12 +8,14 @@ pips_sq = split("5,19,159,1379,13579,134679", ",", false)
 pips_tri = split("5,28,279", ",", false)
 
 -- black pips centred on x, y, s apart; 0 is a sad face, values without a
--- layout print. num: always print the value (d8). rg: a rigged face, its last
--- pip is orange (a printed value turns orange with a black outline)
+-- layout print. num: always print the value (d8). rg: a rigged face (+2), the
+-- pips not in the layout for 2 less are red (a printed value turns red with a
+-- black outline)
 function draw_pips(x, y, v, s, tri, num, rg)
 	if tri then y += s / 2 end
 	local set = v == 0 and "1379" or not num and (tri and pips_tri or pips_sq)[v]
-	if not set then return txt(v, x, y - 2, rg and 9 or 0, "c", rg) end
+	if not set then return txt(v, x, y - 2, rg and 8 or 0, "c", rg) end
+	local old = rg and (tri and pips_tri or pips_sq)[v - 2] or ""
 	-- triangle dots sit closer together so the outer ones clear the edges
 	local r, sp = s \ 4, tri and s - s \ 4 or s
 	-- 0 is a sad face: eyes and mouth corners are pips 1 3 7 9, plus a bar
@@ -23,8 +25,11 @@ function draw_pips(x, y, v, s, tri, num, rg)
 	end
 	for i = 1, #set do
 		local p = tonum(set[i]) - 1
-		local px, py = x + (p % 3 - 1) * sp, y + (p \ 3 - 1) * sp
-		rectfill(px - r, py - r, px - r + s \ 2 - 1, py - r + s \ 2 - 1, rg and i == #set and 9 or 0)
+		local px, py, c = x + (p % 3 - 1) * sp, y + (p \ 3 - 1) * sp, rg and 8 or 0
+		for j = 1, #old do
+			if old[j] == set[i] then c = 0 end
+		end
+		rectfill(px - r, py - r, px - r + s \ 2 - 1, py - r + s \ 2 - 1, c)
 	end
 end
 

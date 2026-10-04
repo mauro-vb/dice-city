@@ -1,5 +1,6 @@
 title = screen:extend({
 	init = function(_ENV)
+		reload(0x8000, 0, 0x2000, "splash.p8")
 		make(_ENV, "start", function()
 			new_run()
 			scene:load(shop)
@@ -7,6 +8,6 @@ title = screen:extend({
 	end,
 
 	text = function()
-		txt("autoroll", 64, 50, 7, "c", true)
+		memcpy(0x6000, 0x8000, 0x2000)
 	end,
 })
