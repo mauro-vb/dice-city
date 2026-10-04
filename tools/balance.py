@@ -65,10 +65,10 @@ ITEM_TIERS = ["potion", "bomb", "reroll", "double", "rig", "lvl up", "rig+", "lv
 
 # src/defs/enemies.p8.lua -- a list is a stat that rolls one of its values
 ENEMIES = {
-    "tourist":    dict(hp=8, atk=2, spd=1, defn=0),
-    "drunk": dict(hp=16, atk=4, spd=14, defn=0),
+    "tourist":    dict(hp=8, atk=2, spd=1, defn=1),
+    "drunk": dict(hp=16, atk=4, spd=14, defn=1),
     "bouncer":    dict(hp=22, atk=6, spd=2, defn=7),
-    "gambler":    dict(hp=28, atk=[4, 12], spd=6, defn=0),
+    "gambler":    dict(hp=28, atk=[4, 12], spd=6, defn=1),
     "slot machine":      dict(hp=35, atk=100, spd=-3, defn=2),
     "loan shark": dict(hp=28, atk=22, spd=0, defn=3),
     "the house":  dict(hp=32, atk=list(range(11, 17)), spd=list(range(3, 9)),

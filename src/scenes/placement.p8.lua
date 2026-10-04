@@ -292,11 +292,11 @@ placement = scene:extend({
 		print(foe.name, hx, 2, 7)
 		hp_bar(hx, 9, 94, e_shown, bars.e_trail, foe.hp, 8, e_flash > 0)
 		charge_bar(hx, 17, 94, bars.e_charge.v)
-		-- a rolling stat shows its range until rolled: "a5-11 s8 d0"
+		-- a rolling stat shows its range until rolled: "atk5-11 spd8 def1"
 		local stats = ""
 		for k in all(stat_names) do
 			local v = foe[k]
-			stats ..= sub(k, 1, 1)..(type(v) == "table" and v[1].."-"..v[#v] or v).." "
+			stats ..= k..(type(v) == "table" and v[1].."-"..v[#v] or v).." "
 		end
 		print(stats, hx, 22, 6)
 		line(0, 29, 127, 29, dark)
