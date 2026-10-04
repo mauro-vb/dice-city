@@ -8,4 +8,4 @@
 - `dice-city.p8.png` – the compressed cart; its label is the splash art. On its own (e.g. the PICO-8 BBS) it can't load `splash.p8`, so the title and game over show no splash.
 - `dice-city.p8` – the comment-free source that was exported.
 
-The folders aren't in git (each web build is about 1.8 MB); only this README is.
+The folders are git-ignored (each is about 2.3 MB), so test exports stay local. To push a release: `git add -f exports/<folder>` and commit.
