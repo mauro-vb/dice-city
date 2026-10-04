@@ -149,6 +149,7 @@ placement = scene:extend({
 		if k == bomb then
 			-- [sfx 39: bomb]
 			sfx(39)
+			sparks(_ENV, 10, 12)
 			return hurt_bar(_ENV, "e", b.e_hp)
 		end
 		if not k then return end
@@ -252,11 +253,9 @@ placement = scene:extend({
 		-- hit-stop: the next tick waits longer the harder the hit
 		frames = -2 - ev.dmg \ 3
 		if target == "e" then
-			-- street fighter style sparks: one more per 4 damage (3 at most: god
-			-- mode hits for 9999), bigger with damage
-			for i = 0, min(ev.dmg \ 4, 2) do
-				sparkp({x = stage.foe_x + rnd(16) - 8, y = 50 + rnd(16), size = min(4 + ev.dmg, 12), incrsize = 1, maxage = 6})
-			end
+			-- one more spark per 4 damage (3 at most: god mode hits for 9999),
+			-- bigger with damage
+			sparks(_ENV, 1 + min(ev.dmg \ 4, 2), min(4 + ev.dmg, 12))
 		else
 			-- the enemy lunges at you: quick step down, ease back. a fresh
 			-- table each hit, so two lunges never tween the same field
@@ -265,6 +264,14 @@ placement = scene:extend({
 		end
 		hurt_bar(_ENV, target, ev[target.."_hp"])
 		charge_next(_ENV, ev.who)
+	end,
+
+	-- n street fighter style sparks of size s on the big enemy art (hits: 1-3,
+	-- a bomb: 10)
+	sparks = function(_ENV, n, s)
+		for i = 1, n do
+			sparkp({x = stage.foe_x + rnd(16) - 8, y = 50 + rnd(16), size = s, incrsize = 1, maxage = 6})
+		end
 	end,
 
 	-- a side ("p" / "e") took damage: snap its number, flash, let the trail follow
