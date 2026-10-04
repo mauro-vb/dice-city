@@ -40,6 +40,7 @@ focus = class:extend({
 		if not cur or not cur:is_on() then return end
 		if cur.pickable then
 			held = cur
+			sfx(34) -- pluck
 		elseif cur.on_press then
 			cur.on_press(cur)
 		end
@@ -52,6 +53,7 @@ focus = class:extend({
 		held.x, held.y = mx, my
 		cur:on_drop(held)
 		held = false
+		sfx(35) -- place
 		return true
 	end,
 

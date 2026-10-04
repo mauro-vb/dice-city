@@ -57,6 +57,7 @@ shop = scene:extend({
 				on_press = function()
 					local got = buy(k)
 					if not got then return end
+					sfx(38) -- buy
 					-- a bought die flies from its card to your row
 					if got != true then got.x, got.y = cx, 28 end
 					deli(offers, i)
@@ -71,6 +72,7 @@ shop = scene:extend({
 			accepts = function() return true end,
 			on_drop = function(_, d)
 				sell(d)
+				sfx(38)
 				build(_ENV)
 			end,
 		}))
