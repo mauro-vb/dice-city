@@ -90,7 +90,7 @@ function use_item(i, b, d)
 	elseif b then
 		b:heal(5)
 	else
-		run:heal(5)
+		run.hp = min(run.max_hp, run.hp + 5)
 	end
 	return s.k
 end
@@ -101,6 +101,6 @@ function sell_price(d)
 end
 
 function sell(d)
-	run:earn(sell_price(d))
+	run.coins += sell_price(d)
 	del(run.bag, d)
 end

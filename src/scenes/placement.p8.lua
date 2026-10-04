@@ -150,7 +150,8 @@ placement = scene:extend({
 	upd = function(_ENV)
 
 		for d in all(run.bag) do
-			d.pickable = phase == "place" and not aim
+			-- a wild die can still move once you've seen the rolls
+			d.pickable = (phase == "place" or phase == "rolled" and d.kind.perk == "wild") and not aim
 			d.on_press = aim and pick
 		end
 		act_btn.label = phase == "place" and "roll" or phase == "done" and "next" or "fight"

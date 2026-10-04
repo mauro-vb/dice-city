@@ -66,12 +66,6 @@ player = game_object:extend({
 		end
 		return u
 	end,
-	heal = function(_ENV, value)
-		hp = min(max_hp, hp + value)
-	end,
-	earn = function(_ENV, value)
-		coins += value
-	end,
 	spend = function(_ENV, value)
 		if coins < value then return false end
 		coins -= value

@@ -20,7 +20,7 @@ function finish_fight(b)
 	end
 	gain.reward = st.reward
 	gain.leftover = b.coins
-	run:earn(gain.reward + gain.leftover)
+	run.coins += gain.reward + gain.leftover
 	return gain, shop
 end
 
