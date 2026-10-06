@@ -37,28 +37,28 @@ from collections import Counter
 
 # --- copies of src/defs ----------------------------------------------------
 
-# src/defs/dice.p8.lua: d3 / d6 / d8, each with a + (every face +1) and a ++
+# src/defs/dice.p8.lua: d4 / d6 / d8, each with a + (every face +1) and a ++
 # (+2), 2 coins more per +
 DICE = {}
-for _name, _top, _price in (("d3", 3, 1), ("d6", 6, 4), ("d8", 8, 6)):
+for _name, _top, _price in (("d4", 4, 2), ("d6", 6, 3), ("d8", 8, 4)):
     for _plus in range(3):
         DICE[_name + "+" * _plus] = dict(faces=[f + 1 + _plus for f in range(_top)],
                                          price=_price + 2 * _plus)
 # src/defs/shop_items.p8.lua. the bot never buys "double" (a copy of a placed
 # die for one fight, needs a free bag spot: rarely possible with 5 dice).
 # enchantments (ENCH) go on a die (d["ench"], one per die): greedy = unused
-# pays 2x, grower = placed: lowest face +1 for good, wild = moved after the
+# pays 2x, grower = placed: lowest face +2 for good, wild = moved after the
 # roll, glass = rolls 2x and breaks 1 in 4 when the fight starts
-ITEMS = {"potion": 3, "bomb": 6, "reroll": 1, "double": 4,
+ITEMS = {"potion": 3, "bomb": 4, "reroll": 0, "double": 2,
          "greedy": 3, "grower": 3, "wild": 3, "glass": 3}
 ENCH = ("greedy", "grower", "wild", "glass")
 # level ups: bought = every base stat + n for the rest of the run (never in
 # the inventory)
 LVL = {"lvl up": 1, "lvl up+": 2}
-ITEMS.update({"lvl up": 6, "lvl up+": 9})
+ITEMS.update({"lvl up": 4, "lvl up+": 7})
 # rigs: + this much to a random face of a die, for good
 RIG = {"rig": 1, "rig+": 2, "rig++": 3}
-ITEMS.update({"rig": 2, "rig+": 3, "rig++": 4})
+ITEMS.update({"rig": 1, "rig+": 2, "rig++": 3})
 # the regular item pool in tier order (gen_offers / pick): the first 6 at
 # first, 8 from idx 2, all 9 from idx 3. enchantments: one per shop, last
 ITEM_TIERS = ["potion", "bomb", "reroll", "double", "rig", "lvl up", "rig+", "lvl up+", "rig++"]
@@ -66,13 +66,12 @@ ITEM_TIERS = ["potion", "bomb", "reroll", "double", "rig", "lvl up", "rig+", "lv
 # src/defs/enemies.p8.lua -- a list is a stat that rolls one of its values
 ENEMIES = {
     "tourist":    dict(hp=8, atk=2, spd=1, defn=1),
-    "drunk": dict(hp=16, atk=3, spd=10, defn=1),
-    "bouncer":    dict(hp=22, atk=5, spd=2, defn=7),
-    "gambler":    dict(hp=28, atk=[4, 12], spd=5, defn=1),
+    "drunk":      dict(hp=16, atk=3, spd=10, defn=0),
+    "bouncer":    dict(hp=22, atk=5, spd=-1, defn=7),
+    "gambler":    dict(hp=28, atk=[12, 18], spd=0, defn=[0, 1, 2, 3]),
     "slot machine":      dict(hp=35, atk=100, spd=-3, defn=2),
-    "loan shark": dict(hp=28, atk=22, spd=0, defn=3),
-    "the house":  dict(hp=32, atk=list(range(11, 17)), spd=list(range(3, 9)),
-                       defn=list(range(5, 11))),
+    "loan shark": dict(hp=28, atk=10, spd=2, defn=3),
+    "the house":  dict(hp=32, atk=15, spd=5, defn=6),
 }
 
 # src/defs/stages.p8.lua; the shop after each fight is src/logic/economy.p8.lua
@@ -394,12 +393,12 @@ def play_fight(run, enemy, style):
                 if best is None or key > best[0]:
                     best = (key, trial)
             place = best[1]
-    # growers placed in the fight: lowest face +1 (the last one of that value)
+    # growers placed in the fight: lowest face +2 (the last one of that value)
     for i, d in enumerate(run.bag):
         if perk(d) == "grower" and place[i] != BAG:
             f = d["faces"]
             j = max(k for k in range(len(f)) if f[k] == min(f))
-            f[j] += 1
+            f[j] += 2
     s, coins = stats_of(run.bag, place, values, run.lvl)
     run.last_stats = s
     left = fight(s, foe, run.hp, e_hp)
@@ -468,8 +467,8 @@ def matchup_table(n_samples=400, seed=1):
     """each boss against the same mid-run bag, placed every way: how much does
     the best placement beat the naive ones? (the puzzle, isolated)"""
     rng = random.Random(seed)
-    bag = [dict(kind=k, faces=list(DICE[k]["faces"])) for k in ["d6", "d6", "d6+", "d3++", "d8"]]
-    print("\nsame bag (2 d6, d6+, d3++, d8), full hp: win % per placement")
+    bag = [dict(kind=k, faces=list(DICE[k]["faces"])) for k in ["d6", "d6", "d6+", "d4++", "d8"]]
+    print("\nsame bag (2 d6, d6+, d4++, d8), full hp: win % per placement")
     print(f"{'boss':12} {'smart':>6} {'all atk':>8} {'even':>6}  smart placement (atk/spd/def/bag dice)")
     for name in ENEMIES:
         run = Run(rng)

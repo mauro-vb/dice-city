@@ -1,5 +1,5 @@
 test("a roll is always one of the die's faces", function()
-	for k in all({d6, d3}) do
+	for k in all({d6, d4}) do
 		local d = die:new({kind = k})
 		for _ = 1, 50 do
 			check(count(k.faces, roll_die(d)) > 0, k.name.." rolled a non-face")
@@ -14,8 +14,8 @@ test("dice don't share faces", function()
 	check(b.faces[1] == 1 and d6.faces[1] == 1)
 end)
 
-test("d3 is wider than d6", function()
-	check(die:new({kind = d3}).w == 18 and die:new().w == 16)
+test("d4 is wider than d6", function()
+	check(die:new({kind = d4}).w == 18 and die:new().w == 16)
 end)
 
 test("range: lowest and highest face", function()
@@ -29,11 +29,12 @@ test("an enemy's rolling stats roll into a copy", function()
 	local seen = {}
 	for _ = 1, 50 do
 		local f = roll_foe(enemy4)
-		check(f.atk == 4 or f.atk == 12, "gambler atk "..tostr(f.atk))
-		check(f.def == enemy4.def, "fixed stats copied")
+		check(f.atk == 12 or f.atk == 18, "gambler atk "..tostr(f.atk))
+		check(f.def >= 0 and f.def <= 3, "gambler def "..tostr(f.def))
+		check(f.spd == enemy4.spd, "fixed stats copied")
 		seen[f.atk] = true
 	end
-	check(seen[4] and seen[12], "both values come up")
+	check(seen[12] and seen[18], "both values come up")
 	check(type(enemy4.atk) == "table", "the def itself is untouched")
 	check(roll_foe(enemy1).atk == enemy1.atk, "nothing rolls: same stats")
 end)
@@ -46,7 +47,7 @@ test("every fight stage has a named enemy, the last is the boss", function()
 end)
 
 test("grower: the lowest face grows, faces stay in order, marked +1", function()
-	local g = die:new({kind = d3})
+	local g = die:new({kind = d4})
 	grow(g)
 	check(g.faces[1] == 2 and g.faces[2] == 2 and g.rigged[1] == 1, "1 -> 2")
 	grow(g)
@@ -54,8 +55,8 @@ test("grower: the lowest face grows, faces stay in order, marked +1", function()
 end)
 
 test("plus dice: every face +1, ++ every face +2", function()
-	for i = 1, 3 do
-		check(d3p.faces[i] == d3.faces[i] + 1 and d3pp.faces[i] == d3.faces[i] + 2, "d3")
+	for i = 1, 4 do
+		check(d4p.faces[i] == d4.faces[i] + 1 and d4pp.faces[i] == d4.faces[i] + 2, "d4")
 	end
 	for i = 1, 6 do
 		check(d6p.faces[i] == d6.faces[i] + 1 and d6pp.faces[i] == d6.faces[i] + 2, "d6")

@@ -21,8 +21,8 @@ end)
 
 test("can't buy without the coins", function()
 	fresh()
-	run.coins = d3.price - 1
-	check(not buy(d3) and #run.bag == 0 and run.coins == d3.price - 1)
+	run.coins = d4.price - 1
+	check(not buy(d4) and #run.bag == 0 and run.coins == d4.price - 1)
 end)
 
 test("same items stack in one slot, up to stack_max", function()
@@ -130,7 +130,7 @@ end)
 
 test("greedy: unused it pays double its roll", function()
 	fresh()
-	local g, d = run:add_die(d3), run:add_die(d3)
+	local g, d = run:add_die(d4), run:add_die(d4)
 	g.ench, g.value, d.value = greedy, 3, 3
 	check(leftover_coins(run:unused()) == 9)
 end)
@@ -169,12 +169,12 @@ test("at most dice_max dice", function()
 	fresh()
 	run.coins = 999
 	for i = 1, dice_max do
-		check(buy(d3))
+		check(buy(d4))
 	end
-	check(not can_buy(d3) and #run.bag == dice_max, "bag full")
+	check(not can_buy(d4) and #run.bag == dice_max, "bag full")
 	check(can_buy(potion), "items still fine")
 	sell(run.bag[1])
-	check(can_buy(d3), "room again after selling")
+	check(can_buy(d4), "room again after selling")
 end)
 
 test("a column takes at most 3 dice", function()
@@ -213,7 +213,7 @@ test("double: a temporary copy in the same column, if it fits", function()
 	local c = run.slots.atk[2]
 	check(c.temp and c.value == d.value and c.kind == d6 and c.faces != d.faces, "same value, own faces")
 	check(not c.ench, "never enchanted")
-	run:place(run:add_die(d3), "atk")
+	run:place(run:add_die(d4), "atk")
 	check(not use_item(1, false, d), "column full")
 end)
 

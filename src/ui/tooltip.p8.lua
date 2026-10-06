@@ -19,8 +19,8 @@ end
 function die_tip(it, d, below)
 	local k, n, e = d.kind, #d.faces, d.ench
 	local info = e and e.info or "avg "..d:avg_str()
-	-- squares (d6) and circles (d8) 10 px apart; triangles (d3) 13 px apart
-	local tri = n == 3
+	-- squares (d6) and circles (d8) 10 px apart; triangles (d4) 13 px apart
+	local tri = n == 4
 	local sp = tri and 13 or 10
 	local x, y = tip_box(it, max(n * sp + 5, max(#info, #k.name) * 4 + 6), 40, below)
 	-- an enchanted die: its enchantment's name after the die's

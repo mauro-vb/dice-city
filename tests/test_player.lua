@@ -1,6 +1,6 @@
 local function new_player()
 	local p = player:new()
-	for k in all({d6, d6, d3, d3}) do
+	for k in all({d6, d6, d4, d4}) do
 		p:add_die(k)
 	end
 	return p
@@ -41,13 +41,13 @@ end)
 
 test("new players don't share dice", function()
 	local a, b = new_player(), new_player()
-	a:add_die(d3)
+	a:add_die(d4)
 	check(#a.bag == 5 and #b.bag == 4)
 end)
 
 test("roll_all: every die, columns left to right, then the bag", function()
 	local p = player:new()
-	local a, b, c = p:add_die(d3), p:add_die(d8), p:add_die(d6)
+	local a, b, c = p:add_die(d4), p:add_die(d8), p:add_die(d6)
 	p:place(b, "atk")
 	p:place(c, "spd")
 	local order = p:roll_all()

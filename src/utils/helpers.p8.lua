@@ -55,7 +55,7 @@ function defs(keys, s)
 	end
 end
 
--- "d6,d3" -> {d6, d3}: a list of globals by name
+-- "d6,d4" -> {d6, d4}: a list of globals by name
 function names(s)
 	local t = split(s)
 	for i = 1, #t do
