@@ -9,6 +9,8 @@ build/<name>.p8 with PICO-8's headless exporter:
                           a .p8.png can't bundle splash.p8: on its own (e.g.
                           the BBS) the title and game over show no splash
   <name>.p8               the comment-free source that was exported
+  <name>.bin/             windows, mac, linux and raspberry pi zips, splash.p8
+                          bundled. kept out of git (too big)
 
 HTML export needs a cart label: if the cart has none, the splash art becomes
 one (colour 1 as navy, 129, like the game's screen palette).
@@ -66,11 +68,12 @@ def main():
     out.mkdir(parents=True)
     shutil.copy(SPLASH, out / "splash.p8")
     export(pico8, cart, out, "index.html splash.p8")
+    export(pico8, cart, out, f"{name}.bin splash.p8")
     export(pico8, cart, out, f"{name}.p8.png")
     (out / "splash.p8").unlink()
     shutil.copy(cart, out / f"{name}.p8")
 
-    missing = [f for f in ("index.html", "index.js", f"{name}.p8.png") if not (out / f).exists()]
+    missing = [f for f in ("index.html", "index.js", f"{name}.p8.png", f"{name}.bin") if not (out / f).exists()]
     if missing:
         sys.exit(f"error: export failed, missing {', '.join(missing)} in {out.relative_to(ROOT)}")
     with zipfile.ZipFile(out / f"{name}-html.zip", "w", zipfile.ZIP_DEFLATED) as z:

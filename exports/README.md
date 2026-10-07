@@ -7,5 +7,6 @@
 - `dice-city-html.zip` – the two files above, ready to upload to itch.io (set the project to HTML, viewport 512×512 or bigger).
 - `dice-city.p8.png` – the compressed cart; its label is the splash art. On its own (e.g. the PICO-8 BBS) it can't load `splash.p8`, so the title and game over show no splash.
 - `dice-city.p8` – the comment-free source that was exported.
+- `dice-city.bin/` – desktop builds, `splash.p8` bundled: `dice-city_windows.zip`, `_osx.zip`, `_linux.zip`, `_raspi.zip` (about 12 MB together). Upload these to itch.io; they stay out of git.
 
-The folders are git-ignored (each is about 2.3 MB), so test exports stay local. To push a release: `git add -f exports/<folder>` and commit.
+The folders are git-ignored (each is about 2.3 MB without the binaries), so test exports stay local. To push a release without the binaries: `git add -f exports/<folder> ':!exports/<folder>/dice-city.bin'` and commit.
